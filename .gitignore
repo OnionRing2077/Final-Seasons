@@ -1,0 +1,101 @@
+########################
+# Unity Generated
+########################
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+UserSettings/
+
+sysinfo.txt
+
+########################
+# IDE / Editor
+########################
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.unityproj
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+
+########################
+# OS
+########################
+.DS_Store
+Thumbs.db
+
+########################
+# Unity Cache / Crash
+########################
+*.stacktrace
+*.addressables
+
+########################
+# Mobile
+########################
+.gradle/
+*.apk
+*.aab
+DerivedData/
+
+########################
+# Version Control
+########################
+.collab/
+.plastic/
+
+# =========================
+# Third-party / Asset Store
+# =========================
+
+Assets/SVK/
+Assets/TerrainAutoUpgrade/
+Assets/4K PBR Realistic Ground Textures/
+Assets/BK_AlchemistHouse/
+Assets/Brushs/
+Assets/Easy3D/
+Assets/Fantasy Wooden GUI Free/
+Assets/Free/
+Assets/FREE_Cartoon_Halloween_Pack/
+Assets/Grass And Flowers Pack 1/
+Assets/Hand Painted Seamless ClayGround Textures/
+Assets/Low Poly Graveyard/
+Assets/LowPolyDungeonsLite/
+Assets/LowPolyMedievalPropsLite/
+Assets/NaturePack/
+Assets/PavingStone/
+Assets/Photon/
+Assets/Polytope Studio/
+Assets/Pure Poly/
+Assets/RPG Button 7/
+Assets/Simple 2D Platformer BE2/
+Assets/Stone head/
+Assets/Stylize Water Texture/
+Assets/Stylized Crystal/
+Assets/StylizedGrass/
+Assets/Tree 1_Textures/
+Assets/Tree_Textures/
+Assets/UI Toolkit/
+Assets/WoodsLifestyle/
+Assets/YughuesFreePavementsMaterials/
+
+
+########################
+# Optional: Large Binary Formats
+########################
+*.fbx
+*.psd
+*.tga
+*.exr
+*.blend

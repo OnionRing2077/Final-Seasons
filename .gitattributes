@@ -1,0 +1,48 @@
+# Normalize text files
+* text=auto eol=lf
+
+# Unity YAML files (safe merge)
+*.meta text merge=unityyamlmerge
+*.unity text merge=unityyamlmerge
+*.prefab text merge=unityyamlmerge
+*.asset text merge=unityyamlmerge
+*.anim text merge=unityyamlmerge
+*.controller text merge=unityyamlmerge
+*.mat text merge=unityyamlmerge
+*.mask text merge=unityyamlmerge
+
+# Code
+*.cs diff=csharp
+
+# Images (binary)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.tga binary
+*.gif binary
+*.bmp binary
+*.tif binary
+*.tiff binary
+*.psd binary
+
+# 3D Models (binary)
+*.fbx binary
+*.obj binary
+*.blend binary
+
+# Audio (binary)
+*.mp3 binary
+*.wav binary
+*.ogg binary
+
+# Video (binary)
+*.mp4 binary
+*.mov binary
+
+# Disable LFS completely
+*.png -filter -diff -merge
+*.fbx -filter -diff -merge
+*.tga -filter -diff -merge
+*.psd -filter -diff -merge
+*.tif -filter -diff -merge
+*.jpg -filter -diff -merge
