@@ -19,35 +19,50 @@ public class PlayerMovement2D : MonoBehaviourPun
     }
 
     void Update()
+{
+    if (!photonView.IsMine) return;
+
+    input.x = Input.GetAxisRaw("Horizontal");
+    input.y = Input.GetAxisRaw("Vertical");
+    input.Normalize();
+
+    if (input != Vector2.zero)
+        lastMove = input;   // ⭐ ใช้ตัวนี้เป็นทิศจริง
+
+    bool isRun = Input.GetKey(KeyCode.LeftShift);
+
+    float speed = rb.velocity.magnitude;
+
+    anim.SetFloat("Speed", speed);
+    anim.SetBool("IsRun", isRun);
+}
+
+
+    void LateUpdate()
+{
+    if (!photonView.IsMine) return;
+
+    if (rb.velocity.sqrMagnitude < 0.01f) return;
+
+    Vector2 v = rb.velocity.normalized;
+
+    // แปลง world movement → isometric facing
+    float isoX = v.x - v.y;
+    float isoY = (v.x + v.y) * 0.5f;
+
+    // Flip sprite
+    if (Mathf.Abs(isoX) > 0.01f)
     {
-        if (!photonView.IsMine) return;
-
-        // อ่าน input
-        input.x = Input.GetAxisRaw("Horizontal");
-        input.y = Input.GetAxisRaw("Vertical");
-        input.Normalize();
-
-        if (input != Vector2.zero)
-            lastMove = input;
-
-        bool isRun = Input.GetKey(KeyCode.LeftShift);
-
-        // ใช้ velocity จริง → ไม่มีวันสไลด์
-        float speed = rb.velocity.magnitude;
-
-        anim.SetFloat("Speed", speed);
-        anim.SetBool("IsRun", isRun);
-        anim.SetFloat("MoveX", lastMove.x);
-        anim.SetFloat("MoveY", lastMove.y);
-
-        // Flip sprite
-        if (lastMove.x != 0)
-        {
-            Vector3 s = transform.localScale;
-            s.x = Mathf.Abs(s.x) * (lastMove.x < 0 ? -1 : 1);
-            transform.localScale = s;
-        }
+        Vector3 s = transform.localScale;
+        s.x = Mathf.Abs(s.x) * (isoX > 0 ? 1 : -1);
+        transform.localScale = s;
     }
+
+    anim.SetFloat("MoveX", isoX);
+    anim.SetFloat("MoveY", isoY);
+}
+
+
 
     void FixedUpdate()
     {

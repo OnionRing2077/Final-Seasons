@@ -95,7 +95,91 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: cornYoung_S_0
+      rect:
+        serializedVersion: 2
+        x: 45
+        y: 61
+        width: 35
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 156a8f6457b0c244d8f3d3dfa78c17f8
+      internalID: 1082182523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cornYoung_S_1
+      rect:
+        serializedVersion: 2
+        x: 107
+        y: 93
+        width: 33
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5578dda787ed08d4a91ba8a738610700
+      internalID: -1268662720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cornYoung_S_2
+      rect:
+        serializedVersion: 2
+        x: 175
+        y: 59
+        width: 35
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22748ae7c54243a4dbfe3f221b0305ce
+      internalID: -1195533882
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cornYoung_S_3
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 29
+        width: 35
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 43bb808f71dc49d4d9eb76db9049bfe3
+      internalID: 698284171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -106,7 +190,11 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      cornYoung_S_0: 1082182523
+      cornYoung_S_1: -1268662720
+      cornYoung_S_2: -1195533882
+      cornYoung_S_3: 698284171
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

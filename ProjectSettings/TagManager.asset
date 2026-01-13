@@ -51,6 +51,12 @@ TagManager:
   - name: WallCorner
     uniqueID: 3806883143
     locked: 0
+  - name: Object
+    uniqueID: 3650254119
+    locked: 0
   - name: Player
     uniqueID: 2356683437
+    locked: 0
+  - name: Glass
+    uniqueID: 777015057
     locked: 0
