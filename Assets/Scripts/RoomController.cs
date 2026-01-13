@@ -240,4 +240,12 @@ public class RoomController : MonoBehaviourPunCallbacks
     {
         SceneManager.LoadScene(backSceneName);
     }
+
+    // ================= BACK BUTTON =================
+    public void BackToMainMenu()
+    {
+        PhotonNetwork.Disconnect();   // ออกจาก Photon กันค้าง
+        SceneManager.LoadScene(0);
+    }
+
 }
