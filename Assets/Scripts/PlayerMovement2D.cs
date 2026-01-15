@@ -1,17 +1,22 @@
 using UnityEngine;
 using Photon.Pun;
 
-public class PlayerMovement2D : MonoBehaviourPunCallbacks, IPunObservable
+public class PlayerMovement2D : MonoBehaviourPun, IPunObservable
 {
-    public float walkSpeed = 3f;
-    public float runSpeed = 6f;
+    public float walkSpeed = 2.5f;
+    public float runSpeed = 5f;
 
     Rigidbody2D rb;
     Animator anim;
 
     Vector2 input;
-    Vector2 lastMove;      // ของ local player
-    Vector2 netLastMove;   // ที่มาจาก network
+    Vector2 lastMove = Vector2.down;
+
+    // ===== network =====
+    Vector3 netPos;
+    Vector2 netLastMove;
+    bool netIsMoving;
+    bool netIsRun;
 
     void Awake()
     {
@@ -27,36 +32,20 @@ public class PlayerMovement2D : MonoBehaviourPunCallbacks, IPunObservable
             input.y = Input.GetAxisRaw("Vertical");
             input.Normalize();
 
-            if (input.sqrMagnitude > 0.01f)
-                lastMove = input;
-
+            bool isMoving = input.magnitude > 0.1f;
             bool isRun = Input.GetKey(KeyCode.LeftShift);
 
-            // isometric direction
-            float isoX = lastMove.x - lastMove.y;
-            float isoY = (lastMove.x + lastMove.y) * 0.5f;
+            if (isMoving)
+                lastMove = input;
 
-            anim.SetFloat("MoveX", isoX);
-            anim.SetFloat("MoveY", isoY);
-            anim.SetFloat("Speed", input.magnitude);
-            anim.SetBool("IsRun", isRun);
-
-            // flip only when pressing left/right
-            if (Mathf.Abs(lastMove.x) > 0.05f)
-            {
-                Vector3 s = transform.localScale;
-                s.x = Mathf.Abs(s.x) * (lastMove.x > 0 ? 1 : -1);
-                transform.localScale = s;
-            }
+            UpdateAnimator(lastMove, isMoving, isRun);
         }
         else
         {
-            // remote player animation
-            float isoX = netLastMove.x - netLastMove.y;
-            float isoY = (netLastMove.x + netLastMove.y) * 0.5f;
+            // Smooth movement for remote player
+            transform.position = Vector3.Lerp(transform.position, netPos, Time.deltaTime * 10f);
 
-            anim.SetFloat("MoveX", isoX);
-            anim.SetFloat("MoveY", isoY);
+            UpdateAnimator(netLastMove, netIsMoving, netIsRun);
         }
     }
 
@@ -64,28 +53,46 @@ public class PlayerMovement2D : MonoBehaviourPunCallbacks, IPunObservable
     {
         if (!photonView.IsMine) return;
 
-        bool isRun = Input.GetKey(KeyCode.LeftShift);
-        float speed = isRun ? runSpeed : walkSpeed;
-
+        float speed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
         rb.velocity = input * speed;
     }
 
-    // ===== NETWORK SYNC =====
+    void UpdateAnimator(Vector2 move, bool isMoving, bool isRun)
+    {
+        // isometric facing
+        float isoX = move.x - move.y;
+        float isoY = (move.x + move.y) * 0.5f;
+
+        anim.SetFloat("MoveX", isoX);
+        anim.SetFloat("MoveY", isoY);
+        anim.SetBool("IsMoving", isMoving);
+        anim.SetBool("IsRun", isRun);
+
+        // Flip ONLY when pressing left/right
+        if (Mathf.Abs(move.x) > 0.01f)
+        {
+            Vector3 s = transform.localScale;
+            s.x = Mathf.Abs(s.x) * (move.x > 0 ? 1 : -1);
+            transform.localScale = s;
+        }
+    }
+
+    // ===== Photon Sync =====
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.IsWriting)
         {
+            stream.SendNext(transform.position);
             stream.SendNext(lastMove);
-            stream.SendNext(transform.localScale.x);
+            stream.SendNext(input.magnitude > 0.1f);
+            stream.SendNext(Input.GetKey(KeyCode.LeftShift));
         }
         else
         {
+            netPos = (Vector3)stream.ReceiveNext();
             netLastMove = (Vector2)stream.ReceiveNext();
-            float sx = (float)stream.ReceiveNext();
-
-            Vector3 s = transform.localScale;
-            s.x = sx;
-            transform.localScale = s;
+            netIsMoving = (bool)stream.ReceiveNext();
+            netIsRun = (bool)stream.ReceiveNext();
         }
     }
 }
