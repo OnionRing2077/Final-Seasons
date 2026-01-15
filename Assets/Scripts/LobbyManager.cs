@@ -14,17 +14,15 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     public string gameSceneName = "GameScene";
     public byte maxPlayers = 8;
 
-    void Start()
-    {
-        statusText.text = "Connecting...";
-    }
+    bool lobbyReady = false;
 
     public override void OnJoinedLobby()
     {
-        statusText.text = "Joined Lobby. Ready!";
+        lobbyReady = true;
+        statusText.text = "Connected. Ready!";
     }
 
-    // ================= PLAYER NAME =================
+    // ---------- NAME ----------
     public void SetPlayerName()
     {
         string n = nameInput.text.Trim();
@@ -35,12 +33,12 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         statusText.text = "Name: " + n;
     }
 
-    // ================= CREATE ROOM =================
+    // ---------- CREATE ----------
     public void CreateRoom()
     {
-        if (!PhotonNetwork.InLobby)
+        if (!lobbyReady)
         {
-            statusText.text = "Not in lobby yet!";
+            statusText.text = "Connecting...";
             return;
         }
 
@@ -59,16 +57,24 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         PhotonNetwork.CreateRoom(roomName, options);
     }
 
-    // ================= JOIN ROOM =================
+    // ---------- JOIN ----------
     public void JoinRoom()
     {
-        if (!PhotonNetwork.InLobby)
+        if (!lobbyReady)
         {
-            statusText.text = "Not in lobby yet!";
+            statusText.text = "Connecting...";
             return;
         }
 
-        PhotonNetwork.JoinRoom(roomInput.text.Trim());
+        string roomName = roomInput.text.Trim();
+        if (string.IsNullOrEmpty(roomName))
+        {
+            statusText.text = "Enter room name!";
+            return;
+        }
+
+        statusText.text = "Joining...";
+        PhotonNetwork.JoinRoom(roomName);
     }
 
     public override void OnJoinedRoom()
@@ -77,13 +83,13 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         PhotonNetwork.LoadLevel(gameSceneName);
     }
 
-    public override void OnCreateRoomFailed(short code, string msg)
-    {
-        statusText.text = "Create failed: " + msg;
-    }
-
     public override void OnJoinRoomFailed(short code, string msg)
     {
         statusText.text = "Join failed: " + msg;
+    }
+
+    public override void OnCreateRoomFailed(short code, string msg)
+    {
+        statusText.text = "Create failed: " + msg;
     }
 }

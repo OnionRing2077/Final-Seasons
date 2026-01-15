@@ -7,10 +7,24 @@ public class PhotonLauncher : MonoBehaviourPunCallbacks
 {
     [SerializeField] private string lobbySceneName = "LobbyScene";
 
+    private static bool hasStarted = false;
+
+    void Awake()
+    {
+        if (hasStarted)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        hasStarted = true;
+        DontDestroyOnLoad(gameObject);
+
+        PhotonNetwork.AutomaticallySyncScene = true;
+    }
+
     void Start()
     {
-        PhotonNetwork.AutomaticallySyncScene = true;
-
         if (!PhotonNetwork.IsConnected)
         {
             PhotonNetwork.ConnectUsingSettings();
@@ -24,19 +38,14 @@ public class PhotonLauncher : MonoBehaviourPunCallbacks
     }
 
     public override void OnJoinedLobby()
-    {
-        Debug.Log("Joined Lobby");
-        SceneManager.LoadScene(lobbySceneName);
-    }
+{
+    Debug.Log("Joined Lobby");
+    // ❌ ลบ SceneManager.LoadScene ออก
+}
+
 
     public override void OnDisconnected(DisconnectCause cause)
     {
-        Debug.LogWarning($"Disconnected: {cause}");
+        Debug.LogWarning("Disconnected: " + cause);
     }
-
-    void Awake()
-{
-    PhotonNetwork.AutomaticallySyncScene = true;
-}
-
 }

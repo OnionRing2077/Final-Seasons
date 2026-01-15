@@ -1,7 +1,7 @@
 using UnityEngine;
 using Photon.Pun;
 
-public class PlayerMovement2D : MonoBehaviourPun
+public class PlayerMovement2D : MonoBehaviourPunCallbacks, IPunObservable
 {
     public float walkSpeed = 3f;
     public float runSpeed = 6f;
@@ -10,7 +10,8 @@ public class PlayerMovement2D : MonoBehaviourPun
     Animator anim;
 
     Vector2 input;
-    Vector2 lastMove;
+    Vector2 lastMove;      // ของ local player
+    Vector2 netLastMove;   // ที่มาจาก network
 
     void Awake()
     {
@@ -19,50 +20,45 @@ public class PlayerMovement2D : MonoBehaviourPun
     }
 
     void Update()
-{
-    if (!photonView.IsMine) return;
-
-    input.x = Input.GetAxisRaw("Horizontal");
-    input.y = Input.GetAxisRaw("Vertical");
-    input.Normalize();
-
-    if (input != Vector2.zero)
-        lastMove = input;   // ⭐ ใช้ตัวนี้เป็นทิศจริง
-
-    bool isRun = Input.GetKey(KeyCode.LeftShift);
-
-    float speed = rb.velocity.magnitude;
-
-    anim.SetFloat("Speed", speed);
-    anim.SetBool("IsRun", isRun);
-}
-
-
-    void LateUpdate()
-{
-    if (!photonView.IsMine) return;
-
-    if (rb.velocity.sqrMagnitude < 0.01f) return;
-
-    Vector2 v = rb.velocity.normalized;
-
-    // แปลง world movement → isometric facing
-    float isoX = v.x - v.y;
-    float isoY = (v.x + v.y) * 0.5f;
-
-    // Flip sprite
-    if (Mathf.Abs(isoX) > 0.01f)
     {
-        Vector3 s = transform.localScale;
-        s.x = Mathf.Abs(s.x) * (isoX > 0 ? 1 : -1);
-        transform.localScale = s;
+        if (photonView.IsMine)
+        {
+            input.x = Input.GetAxisRaw("Horizontal");
+            input.y = Input.GetAxisRaw("Vertical");
+            input.Normalize();
+
+            if (input.sqrMagnitude > 0.01f)
+                lastMove = input;
+
+            bool isRun = Input.GetKey(KeyCode.LeftShift);
+
+            // isometric direction
+            float isoX = lastMove.x - lastMove.y;
+            float isoY = (lastMove.x + lastMove.y) * 0.5f;
+
+            anim.SetFloat("MoveX", isoX);
+            anim.SetFloat("MoveY", isoY);
+            anim.SetFloat("Speed", input.magnitude);
+            anim.SetBool("IsRun", isRun);
+
+            // flip only when pressing left/right
+            if (Mathf.Abs(lastMove.x) > 0.05f)
+            {
+                Vector3 s = transform.localScale;
+                s.x = Mathf.Abs(s.x) * (lastMove.x > 0 ? 1 : -1);
+                transform.localScale = s;
+            }
+        }
+        else
+        {
+            // remote player animation
+            float isoX = netLastMove.x - netLastMove.y;
+            float isoY = (netLastMove.x + netLastMove.y) * 0.5f;
+
+            anim.SetFloat("MoveX", isoX);
+            anim.SetFloat("MoveY", isoY);
+        }
     }
-
-    anim.SetFloat("MoveX", isoX);
-    anim.SetFloat("MoveY", isoY);
-}
-
-
 
     void FixedUpdate()
     {
@@ -72,5 +68,24 @@ public class PlayerMovement2D : MonoBehaviourPun
         float speed = isRun ? runSpeed : walkSpeed;
 
         rb.velocity = input * speed;
+    }
+
+    // ===== NETWORK SYNC =====
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.IsWriting)
+        {
+            stream.SendNext(lastMove);
+            stream.SendNext(transform.localScale.x);
+        }
+        else
+        {
+            netLastMove = (Vector2)stream.ReceiveNext();
+            float sx = (float)stream.ReceiveNext();
+
+            Vector3 s = transform.localScale;
+            s.x = sx;
+            transform.localScale = s;
+        }
     }
 }

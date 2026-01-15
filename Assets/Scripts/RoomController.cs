@@ -47,7 +47,7 @@ public class RoomController : MonoBehaviourPunCallbacks
     void Start()
     {
         if (!PhotonNetwork.InRoom) return;
-
+        Debug.Log("Photon Region = " + PhotonNetwork.CloudRegion);
         // ตั้ง Ready เริ่มต้น
         PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable { { READY_KEY, false } });
 

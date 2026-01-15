@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 48861507}
   - component: {fileID: 48861506}
   - component: {fileID: 48861505}
+  - component: {fileID: 48861508}
   m_Layer: 5
   m_Name: Backtomain
   m_TagString: Untagged
@@ -204,9 +205,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3112646354107329842, guid: 63865d447dedc0e449bef420af520209, type: 3}
-        m_TargetAssemblyTypeName: RoomController, Assembly-CSharp
-        m_MethodName: BackToMainMenu
+      - m_Target: {fileID: 48861508}
+        m_TargetAssemblyTypeName: BackToMainMenu, Assembly-CSharp
+        m_MethodName: GoBack
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -254,6 +255,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 48861503}
   m_CullTransparentMesh: 1
+--- !u!114 &48861508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 48861503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e58ed51d19a9754d9fb3574a6176bcf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainMenuScene: MainMenu
 --- !u!1 &118295995
 GameObject:
   m_ObjectHideFlags: 0
