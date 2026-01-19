@@ -5,7 +5,7 @@ public class VisionRangeController : MonoBehaviourPun
 {
     [Header("Vision")]
     public float visionRadius = 5f;
-    public LayerMask obstacleMask;   // VisionBlock
+    public LayerMask obstacleMask;
 
     [Header("Refs")]
     public Transform visionCenter;
@@ -16,19 +16,23 @@ public class VisionRangeController : MonoBehaviourPun
             visionCenter = transform;
     }
 
-    /// <summary>
-    /// ใช้ถามว่า "เห็น target ไหม"
-    /// </summary>
+    // ===== ใช้ให้ Kill / Vision เช็ค =====
     public bool CanSee(Transform target)
     {
         if (!photonView.IsMine) return false;
 
+        // ✅ ประกาศตัวแปรก่อนใช้
         Vector2 dir = target.position - visionCenter.position;
         float dist = dir.magnitude;
 
         if (dist > visionRadius)
             return false;
 
+        // ✅ ยืนติดกัน = เห็นแน่นอน (กัน Raycast พลาด)
+        if (dist < 0.2f)
+            return true;
+
+        // ✅ Raycast เช็คกำแพง
         RaycastHit2D hit = Physics2D.Raycast(
             visionCenter.position,
             dir.normalized,
@@ -36,24 +40,15 @@ public class VisionRangeController : MonoBehaviourPun
             obstacleMask
         );
 
-        // โดนกำแพงก่อน
-        if (hit.collider != null)
-            return false;
+        // Debug ช่วยดู
+        Debug.DrawRay(
+            visionCenter.position,
+            dir.normalized * dist,
+            hit.collider ? Color.red : Color.green
+        );
 
-        return true;
+        return hit.collider == null;
     }
-    // VisionRangeController.cs
-public void ConfigureVision(
-    float radius,
-    LayerMask target,
-    LayerMask obstacle
-)
-{
-    visionRadius = radius;
-    targetMask = target;
-    obstacleMask = obstacle;
-}
-
 
     // ===== API =====
     public void SetVisionRadius(float radius)

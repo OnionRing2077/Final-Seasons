@@ -16,8 +16,8 @@ TagManager:
   - Player
   - Ghost
   - DeadBody
-  - 
-  - 
+  - VisionBlock
+  - Ground
   - 
   - 
   - 

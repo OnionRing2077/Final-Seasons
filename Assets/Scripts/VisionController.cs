@@ -25,6 +25,8 @@ public class VisionController : MonoBehaviourPun
 
         cam.cullingMask = LayerMask.GetMask(
             "Default",
+            "Ground",        // ✅ เพิ่ม
+            "VisionBlock",
             "Player",
             "DeadBody",
             "UI"
@@ -39,6 +41,8 @@ public class VisionController : MonoBehaviourPun
 
         cam.cullingMask = LayerMask.GetMask(
             "Default",
+            "Ground",        // ✅ เพิ่ม
+            "VisionBlock",
             "Player",   // ✅ ผีต้องเห็นคนเป็น
             "Ghost",    // ✅ และเห็นผีด้วย
             "DeadBody",

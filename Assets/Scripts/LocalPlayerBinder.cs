@@ -7,13 +7,18 @@ public class LocalPlayerBinder : MonoBehaviourPun
     {
         if (!photonView.IsMine) return;
 
+        // 🔥 Bind Vision Mask ให้ Local Player
+        VisionMaskController mask = FindObjectOfType<VisionMaskController>();
+        if (mask != null)
+        {
+            mask.player = transform;
+            Debug.Log("VisionMask bound to local player");
+        }
+
         BindKillUI();
         ConfigureVisionByRole();
     }
 
-    // =======================
-    // Bind Kill Button
-    // =======================
     void BindKillUI()
     {
         KillButtonUI ui = FindObjectOfType<KillButtonUI>();
@@ -24,66 +29,33 @@ public class LocalPlayerBinder : MonoBehaviourPun
         }
     }
 
-    // =======================
-    // Vision by Role
-    // =======================
     void ConfigureVisionByRole()
     {
         VisionRangeController vision = GetComponent<VisionRangeController>();
-        if (vision == null)
-        {
-            Debug.LogWarning("VisionRangeController not found");
-            return;
-        }
+        if (vision == null) return;
 
-        PlayerRole role = GetMyRole();
+        if (!PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue("role", out object v))
+            return;
+
+        PlayerRole role = (PlayerRole)(int)v;
 
         switch (role)
         {
             case PlayerRole.Impostor:
-                vision.ConfigureVision(
-                    6.5f,
-                    LayerMask.GetMask("Player"),
-                    LayerMask.GetMask("VisionBlock")
-                );
+                vision.SetVisionRadius(7f);
                 break;
 
             case PlayerRole.Sheriff:
-                vision.ConfigureVision(
-                    5f,
-                    LayerMask.GetMask("Player"),
-                    LayerMask.GetMask("VisionBlock")
-                );
+                vision.SetVisionRadius(5.5f);
                 break;
 
             case PlayerRole.Madman:
-                vision.ConfigureVision(
-                    4.5f,
-                    LayerMask.GetMask("Player"),
-                    LayerMask.GetMask("VisionBlock")
-                );
+                vision.SetVisionRadius(6f);
                 break;
 
             default: // Civilian
-                vision.ConfigureVision(
-                    4f,
-                    LayerMask.GetMask("Player"),
-                    LayerMask.GetMask("VisionBlock")
-                );
+                vision.SetVisionRadius(5f);
                 break;
         }
-
-        Debug.Log($"Vision configured for role: {role}");
-    }
-
-    // =======================
-    // Get Role from Photon
-    // =======================
-    PlayerRole GetMyRole()
-    {
-        if (PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue("role", out object v))
-            return (PlayerRole)(int)v;
-
-        return PlayerRole.Civilian;
     }
 }

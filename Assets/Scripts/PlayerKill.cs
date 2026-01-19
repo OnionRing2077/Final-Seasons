@@ -70,28 +70,30 @@ public class PlayerKill : MonoBehaviourPun
 }
 
     PlayerHealth FindKillTarget()
+{
+    Collider2D[] hits = Physics2D.OverlapCircleAll(
+        transform.position,
+        killRange,
+        playerLayer
+    );
+
+    foreach (var hit in hits)
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(
-            transform.position,
-            killRange,
-            playerLayer
-        );
+        if (hit.gameObject == gameObject) continue;
 
-        foreach (var hit in hits)
-        {
-            if (hit.gameObject == gameObject) continue;
+        PlayerHealth health = hit.GetComponentInParent<PlayerHealth>();
+        if (health == null || health.IsDead) continue;
 
-            PlayerHealth health = hit.GetComponentInParent<PlayerHealth>();
-            if (health != null && !health.IsDead) continue;
-
-            if (vision != null && !vision.CanSee(health.transform))
+        // ✅ เช็ค Vision (ไม่ทะลุกำแพง)
+        if (vision != null && !vision.CanSee(health.transform))
             continue;
 
-                return health;
-        }
-
-        return null;
+        return health;
     }
+
+    return null;
+}
+
 
     void OnDrawGizmosSelected()
     {
