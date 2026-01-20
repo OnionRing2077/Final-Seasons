@@ -1396,6 +1396,7 @@ GameObject:
   - component: {fileID: 6739661930455486747}
   - component: {fileID: -129897471965396791}
   - component: {fileID: 5206800672858118767}
+  - component: {fileID: -9207733314664482598}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -1844,6 +1845,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   reportRange: 2
   deadBodyLayer:
+    serializedVersion: 2
+    m_Bits: 256
+--- !u!114 &-9207733314664482598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6683439762901344763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be8a326302ff7134a935b65e01296059, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reportRange: 1.2
+  meetingScene: MeetingScene
+  targetLayers:
     serializedVersion: 2
     m_Bits: 256
 --- !u!1 &7422663901702345735

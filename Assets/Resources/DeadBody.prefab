@@ -157,8 +157,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 266aa599141c10d4584e65103038466b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  reportRange: 1.2
-  meetingScene: MeetingScene
+  ownerActor: 0
+  isReported: 0
 --- !u!114 &4060280189319293284
 MonoBehaviour:
   m_ObjectHideFlags: 0

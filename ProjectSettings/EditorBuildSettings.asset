@@ -20,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/RoleRevealScene.unity
     guid: 4f945f52f79d0b84387915eddfa98551
+  - enabled: 1
+    path: Assets/Scenes/MeetingScene.unity
+    guid: 3e752b6aba002d542934d38511f1eca9
   m_configObjects: {}
