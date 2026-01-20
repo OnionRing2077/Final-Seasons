@@ -1,7 +1,6 @@
 using UnityEngine;
 using Photon.Pun;
 
-
 public class PlayerKill : MonoBehaviourPun
 {
     [Header("Kill Settings")]
@@ -14,54 +13,26 @@ public class PlayerKill : MonoBehaviourPun
     PlayerHealth myHealth;
     GhostMode ghostMode;
     VisionRangeController vision;
-
+    PlayerIdentity myId;
 
     void Awake()
     {
         myHealth = GetComponent<PlayerHealth>();
         ghostMode = GetComponent<GhostMode>();
         vision = GetComponent<VisionRangeController>();
+        myId = GetComponent<PlayerIdentity>();
     }
 
-    public bool CanKill()
-    {
-        if (!photonView.IsMine) return false;
-
-        // ✅ คนตาย/เป็นผี ฆ่าไม่ได้
-        if (myHealth != null && myHealth.IsDead) return false;
-        if (ghostMode != null && ghostMode.IsGhost) return false;
-
-        if (Time.time < lastKillTime + killCooldown) return false;
-
-        return FindKillTarget() != null;
-    }
-
-    public void TryKill()
-    {
-        if (!photonView.IsMine) return;
-
-        if (myHealth != null && myHealth.IsDead) return;
-        if (ghostMode != null && ghostMode.IsGhost) return;
-
-        PlayerHealth target = FindKillTarget();
-        if (target == null) return;
-
-        lastKillTime = Time.time;
-
-        target.photonView.RPC(
-            "RPC_Die",
-            RpcTarget.All,
-            PhotonNetwork.LocalPlayer.ActorNumber
-        );
-    }
-
-    public float GetCooldownLeft()
+    // =========================
+// ⏱ Cooldown (สำหรับ UI)
+// =========================
+public float GetCooldownLeft()
 {
     float left = (lastKillTime + killCooldown) - Time.time;
     return Mathf.Max(0f, left);
 }
 
-    public float GetCooldown01()
+public float GetCooldown01()
 {
     if (Time.time >= lastKillTime + killCooldown)
         return 1f;
@@ -69,31 +40,120 @@ public class PlayerKill : MonoBehaviourPun
     return 1f - (GetCooldownLeft() / killCooldown);
 }
 
-    PlayerHealth FindKillTarget()
+    // =========================
+    // ✅ เช็คว่ากดปุ่มฆ่าได้ไหม
+    // =========================
+    public bool CanKill()
 {
-    Collider2D[] hits = Physics2D.OverlapCircleAll(
-        transform.position,
-        killRange,
-        playerLayer
-    );
+    if (!photonView.IsMine) return false;
+    if (myHealth.IsDead) return false;
+    if (ghostMode.IsGhost) return false;
 
-    foreach (var hit in hits)
-    {
-        if (hit.gameObject == gameObject) continue;
+    Debug.Log($"CanKill? role={myId.Role} mine={photonView.IsMine}");
 
-        PlayerHealth health = hit.GetComponentInParent<PlayerHealth>();
-        if (health == null || health.IsDead) continue;
-
-        // ✅ เช็ค Vision (ไม่ทะลุกำแพง)
-        if (vision != null && !vision.CanSee(health.transform))
-            continue;
-
-        return health;
-    }
-
-    return null;
+    return myId.Role == PlayerRole.Impostor ||
+           myId.Role == PlayerRole.Sheriff;
 }
 
+    // =========================
+    // 🔪 กดฆ่า
+    // =========================
+    public void TryKill()
+    {   
+        Debug.Log($"[{photonView.Owner.NickName}] TRY KILL | Role={myId.Role}");
+
+        if (!CanKill()) return;
+
+        PlayerHealth target = FindKillTarget();
+        if (target == null) return;
+
+        PlayerIdentity targetId = target.GetComponent<PlayerIdentity>();
+        if (targetId == null) return;
+
+        lastKillTime = Time.time;
+
+        // =====================
+        // 🔴 IMPOSTOR
+        // =====================
+        if (myId.Role == PlayerRole.Impostor)
+        {
+            target.photonView.RPC(
+                "RPC_Die",
+                RpcTarget.All,
+                photonView.Owner.ActorNumber
+            );
+            return;
+        }
+
+        // =====================
+        // 🟡 SHERIFF
+        // =====================
+        if (myId.Role == PlayerRole.Sheriff)
+        {
+            // ยิง Impostor → Impostor ตาย
+            if (targetId.Role == PlayerRole.Impostor)
+            {
+                target.photonView.RPC(
+                    "RPC_Die",
+                    RpcTarget.All,
+                    photonView.Owner.ActorNumber
+                );
+                return;
+            }
+
+            // ยิง Madman → Madman ตายคนเดียว ✅
+            if (targetId.Role == PlayerRole.Madman)
+            {
+                target.photonView.RPC(
+                    "RPC_Die",
+                    RpcTarget.All,
+                    photonView.Owner.ActorNumber
+                );
+                return;
+            }
+
+            // ยิงคนดี / Sheriff → ตายคู่ (Sheriff พลาด)
+            target.photonView.RPC(
+                "RPC_Die",
+                RpcTarget.All,
+                photonView.Owner.ActorNumber
+            );
+
+            photonView.RPC(
+                "RPC_Die",
+                RpcTarget.All,
+                photonView.Owner.ActorNumber
+            );
+        }
+    }
+
+    // =========================
+    // 🔍 หาเป้าหมาย
+    // =========================
+    PlayerHealth FindKillTarget()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(
+            transform.position,
+            killRange,
+            playerLayer
+        );
+
+        foreach (var hit in hits)
+        {
+            if (hit.GetComponentInParent<PlayerHealth>() == myHealth)
+            continue;
+
+            PlayerHealth health = hit.GetComponentInParent<PlayerHealth>();
+            if (health == null || health.IsDead) continue;
+
+            if (vision != null && !vision.CanSee(health.transform))
+                continue;
+
+            return health;
+        }
+
+        return null;
+    }
 
     void OnDrawGizmosSelected()
     {

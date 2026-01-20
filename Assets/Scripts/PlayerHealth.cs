@@ -15,24 +15,46 @@ public class PlayerHealth : MonoBehaviourPun
         ghost = GetComponent<GhostMode>();
     }
 
-    [PunRPC]
-    public void RPC_Die(int killerActorNumber)
-    {
-        if (IsDead) return;
-        IsDead = true;
+public PlayerRole GetRole()
+{
+    if (photonView.Owner.CustomProperties.TryGetValue("role", out object r))
+        return (PlayerRole)(int)r;
 
-        // 1) Spawn dead body (ให้ทุกคนเห็น)
-        if (deadBodyPrefab != null)
+    return PlayerRole.Civilian;
+}
+
+    [PunRPC]
+public void RPC_Die(int killerActorNumber)
+{
+    if (IsDead) return;
+    IsDead = true;
+
+    if (deadBodyPrefab != null)
+    {
+        GameObject bodyObj = PhotonNetwork.Instantiate(
+            deadBodyPrefab.name,
+            transform.position,
+            Quaternion.identity
+        );
+
+        DeadBodyVisual body = bodyObj.GetComponent<DeadBodyVisual>();
+
+        if (body != null &&
+            photonView.Owner.CustomProperties.TryGetValue("color", out object v))
         {
-            PhotonNetwork.Instantiate(
-                deadBodyPrefab.name,
-                transform.position,
-                Quaternion.identity
+            int colorIndex = (int)v;
+
+            // 🔥 ส่ง RPC ให้ทุกคน
+            body.photonView.RPC(
+                "RPC_SetColor",
+                RpcTarget.AllBuffered,
+                colorIndex
             );
         }
-
-        // 2) Switch THIS SAME player into Ghost (ไม่ spawn ตัวใหม่)
-        if (ghost != null)
-            ghost.EnterGhost();
     }
+
+    if (ghost != null)
+        ghost.EnterGhost();
+}
+
 }

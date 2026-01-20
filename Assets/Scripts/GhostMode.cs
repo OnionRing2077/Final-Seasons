@@ -32,7 +32,10 @@ public class GhostMode : MonoBehaviourPun
     }
 
     public void EnterGhost()
-    {
+    {      
+        var visibility = GetComponent<PlayerVisibilityController>();
+        if (visibility) visibility.enabled = false;
+
         if (IsGhost) return;
         IsGhost = true;
 
@@ -58,10 +61,14 @@ public class GhostMode : MonoBehaviourPun
         // 5) Switch camera view for local player only
         if (photonView.IsMine && vision != null)
             vision.SetGhostView();
+            
     }
 
     public void EnterAlive()
-    {
+    {   
+        var visibility = GetComponent<PlayerVisibilityController>();
+        if (visibility) visibility.enabled = true;
+
         IsGhost = false;
 
         if (kill) kill.enabled = true;

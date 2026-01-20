@@ -1388,12 +1388,13 @@ GameObject:
   - component: {fileID: 2386143781163094417}
   - component: {fileID: -4804300327628791201}
   - component: {fileID: -1547049142936203699}
-  - component: {fileID: 4798302756976070314}
   - component: {fileID: 2657173315044569135}
   - component: {fileID: -1074133994415513321}
   - component: {fileID: 3712682864371816279}
   - component: {fileID: -7717116603119671970}
   - component: {fileID: -1434272350541468873}
+  - component: {fileID: 6739661930455486747}
+  - component: {fileID: -129897471965396791}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -1703,10 +1704,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29b20086451bd124cbc36b9e61b86edd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerName: 
-  playerColor: {r: 1, g: 1, b: 1, a: 1}
-  body: {fileID: 5588895491123995090}
-  nameTag: {fileID: 4197549104642509059}
 --- !u!114 &-4804300327628791201
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1720,7 +1717,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   killCooldown: 20
-  killRange: 5
+  killRange: 4
   playerLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -1737,20 +1734,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   deadBodyPrefab: {fileID: 6904856544641353092, guid: f2df329047a625f4fa81d6bcf0f3bc87, type: 3}
---- !u!114 &4798302756976070314
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6683439762901344763}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 266aa599141c10d4584e65103038466b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  reportRange: 1.2
-  meetingScene: MeetingScene
 --- !u!114 &2657173315044569135
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1802,7 +1785,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b36c59f55b440d34391ea6ab3be7cc01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  visionRadius: 5
+  visionRadius: 4
   obstacleMask:
     serializedVersion: 2
     m_Bits: 512
@@ -1819,6 +1802,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d10d73aed1d66a94ebd0a3155721b2c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &6739661930455486747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6683439762901344763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc8b23c4dfcbc274eb9a161054fd301c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-129897471965396791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6683439762901344763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6733627c9be8574388d43aa4ee7907e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  renderers: []
 --- !u!1 &7422663901702345735
 GameObject:
   m_ObjectHideFlags: 0

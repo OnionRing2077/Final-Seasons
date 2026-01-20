@@ -1,42 +1,25 @@
-using UnityEngine;
 using Photon.Pun;
+using ExitGames.Client.Photon;
+using UnityEngine;
 
-public class PlayerIdentity : MonoBehaviourPun
+public class PlayerIdentity : MonoBehaviourPunCallbacks
 {
-    public string playerName;
-    public Color playerColor = Color.white;
+    public PlayerRole Role { get; private set; } = PlayerRole.Civilian;
 
-    public SpriteRenderer body;
-    public NameTagFollow nameTag;
-
-    public void Setup(string name)
+    public override void OnPlayerPropertiesUpdate(
+        Photon.Realtime.Player target,
+        Hashtable changedProps)
     {
-        if (photonView.IsMine)
+        if (target == photonView.Owner && changedProps.ContainsKey("role"))
         {
-            Color c = Random.ColorHSV(0,1, 0.6f,1f, 0.6f,1f); // สุ่มสีสวย
-            photonView.RPC("RPC_Setup", RpcTarget.AllBuffered, name, c.r, c.g, c.b);
+            ApplyRole(changedProps["role"]);
         }
     }
 
-    [PunRPC]
-    void RPC_Setup(string name, float r, float g, float b)
+    void ApplyRole(object r)
     {
-        playerName = name;
-        playerColor = new Color(r, g, b);
-
-        if (nameTag != null)
-            nameTag.SetName(name);
-
-        if (body != null)
-            body.color = playerColor;
-        
-        ApplyColor();
-    }
-    void ApplyColor()
-{
-    foreach (var sr in GetComponentsInChildren<SpriteRenderer>())
-    {
-        sr.color = playerColor;
+        Role = (PlayerRole)(int)r;
+        Debug.Log($"[PlayerIdentity] ROLE SYNCED → {Role}");
     }
 }
-}
+

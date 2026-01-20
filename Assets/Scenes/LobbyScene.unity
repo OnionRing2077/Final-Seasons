@@ -1854,9 +1854,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 873336033}
     - target: {fileID: 3112646354107329842, guid: 63865d447dedc0e449bef420af520209, type: 3}
+      propertyPath: backButton
+      value: 
+      objectReference: {fileID: 1198882825}
+    - target: {fileID: 3112646354107329842, guid: 63865d447dedc0e449bef420af520209, type: 3}
       propertyPath: statusText
       value: 
       objectReference: {fileID: 258215086}
+    - target: {fileID: 3112646354107329842, guid: 63865d447dedc0e449bef420af520209, type: 3}
+      propertyPath: readyButton
+      value: 
+      objectReference: {fileID: 1478697432}
     - target: {fileID: 3112646354107329842, guid: 63865d447dedc0e449bef420af520209, type: 3}
       propertyPath: startButton
       value: 

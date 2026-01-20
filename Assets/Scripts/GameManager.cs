@@ -4,6 +4,7 @@ using UnityEngine;
 public class GameManager : MonoBehaviourPunCallbacks
 {
     public Transform[] spawnPoints;
+    public RoleManager roleManager;
 
     void Start()
     {
@@ -14,40 +15,41 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
 
         SpawnPlayer();
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Invoke(nameof(AssignRolesDelayed), 1f);
+        }
+    }
+
+    void AssignRolesDelayed()
+    {
+        if (roleManager == null)
+        {
+            Debug.LogError("RoleManager is NULL! ใส่ RoleManager ใน GameManager");
+            return;
+        }
+
+        roleManager.AssignRoles();
+        PhotonNetwork.LoadLevel("RoleRevealScene");
     }
 
     void SpawnPlayer()
     {
         int index = PhotonNetwork.LocalPlayer.ActorNumber - 1;
-
         if (index < 0 || index >= spawnPoints.Length)
             index = 0;
 
         Vector3 spawnPos = spawnPoints[index].position;
         spawnPos.z = 0;
 
-        // 🔥 Spawn Player
-        GameObject player = PhotonNetwork.Instantiate("Player", spawnPos, Quaternion.identity);
-
-        // 🔥 สร้างสีให้ผู้เล่นคนนี้
-        Color color = Random.ColorHSV(
-            0f, 1f,   // Hue
-            0.7f, 1f,// Saturation
-            0.7f, 1f // Value
+        GameObject player = PhotonNetwork.Instantiate(
+            "Player",
+            spawnPos,
+            Quaternion.identity
         );
 
-        // 🔥 ส่งชื่อ + สี เข้า PlayerIdentity
-        PlayerIdentity id = player.GetComponent<PlayerIdentity>();
-        if (id != null)
-        {
-            id.photonView.RPC(
-                "RPC_Setup",
-                RpcTarget.AllBuffered,
-                PhotonNetwork.NickName,
-                color.r, color.g, color.b
-            );
-        }
-
-        Debug.Log("Spawned player at " + spawnPos);
+        // ⭐ สำคัญ: ใช้ TagObject สำหรับ RoleManager
+        PhotonNetwork.LocalPlayer.TagObject = player;
     }
 }

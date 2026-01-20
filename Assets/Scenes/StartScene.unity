@@ -1749,7 +1749,7 @@ GameObject:
   - component: {fileID: 1045885573}
   - component: {fileID: 1045885572}
   m_Layer: 5
-  m_Name: CreateRoomButton (1)
+  m_Name: JoinRoomButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

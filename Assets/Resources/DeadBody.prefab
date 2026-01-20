@@ -12,9 +12,11 @@ GameObject:
   - component: {fileID: 4995908715768998026}
   - component: {fileID: 3883318643840776276}
   - component: {fileID: 5011982526932602884}
+  - component: {fileID: -3615133726461535632}
+  - component: {fileID: 4060280189319293284}
   m_Layer: 8
   m_Name: DeadBody
-  m_TagString: Player
+  m_TagString: DeadBody
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -143,3 +145,29 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &-3615133726461535632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6904856544641353092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 266aa599141c10d4584e65103038466b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reportRange: 1.2
+  meetingScene: MeetingScene
+--- !u!114 &4060280189319293284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6904856544641353092}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3be41cec9e417624b8ef46a48543527d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

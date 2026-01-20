@@ -8,7 +8,7 @@ public class PhotonLauncher : MonoBehaviourPunCallbacks
     [SerializeField] private string lobbySceneName = "LobbyScene";
 
     private static bool hasStarted = false;
-
+    
     void Awake()
     {
         if (hasStarted)
@@ -48,4 +48,5 @@ public class PhotonLauncher : MonoBehaviourPunCallbacks
     {
         Debug.LogWarning("Disconnected: " + cause);
     }
+    
 }

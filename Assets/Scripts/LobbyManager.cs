@@ -16,6 +16,15 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
     bool lobbyReady = false;
 
+    void Start()
+    {
+        if (!PhotonNetwork.IsConnected)
+        {
+            statusText.text = "Connecting to server...";
+            
+        }
+    }
+
     public override void OnJoinedLobby()
     {
         lobbyReady = true;
@@ -35,7 +44,10 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
     // ---------- CREATE ----------
     public void CreateRoom()
-    {
+    {   
+        if (string.IsNullOrEmpty(PhotonNetwork.NickName))
+            SetPlayerName();
+
         if (!lobbyReady)
         {
             statusText.text = "Connecting...";
@@ -59,7 +71,10 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
     // ---------- JOIN ----------
     public void JoinRoom()
-    {
+    {   
+        if (string.IsNullOrEmpty(PhotonNetwork.NickName))
+            SetPlayerName();
+
         if (!lobbyReady)
         {
             statusText.text = "Connecting...";
@@ -92,4 +107,6 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     {
         statusText.text = "Create failed: " + msg;
     }
+
+    
 }

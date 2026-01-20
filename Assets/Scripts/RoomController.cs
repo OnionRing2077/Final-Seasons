@@ -9,19 +9,12 @@ using System.Collections.Generic;
 // ใช้ Hashtable ของ Photon แบบชัดเจน (กันชนกับ System.Collections.Hashtable)
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
-public enum PlayerRole
-{
-    Impostor,
-    Sheriff,
-    Civilian,
-    Madman
-}
-
 public class RoomController : MonoBehaviourPunCallbacks
 {
     // ===== Custom Properties Keys =====
     private const string READY_KEY = "ready";
     private const string ROLE_KEY = "role";
+    private const string ROLES_ASSIGNED = "rolesAssigned";
 
     [Header("UI")]
     public TMP_Text roomNameText;
@@ -50,6 +43,7 @@ public class RoomController : MonoBehaviourPunCallbacks
         Debug.Log("Photon Region = " + PhotonNetwork.CloudRegion);
         // ตั้ง Ready เริ่มต้น
         PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable { { READY_KEY, false } });
+        PhotonNetwork.AutomaticallySyncScene = true;
 
         RefreshUI();
         statusText.text = PhotonNetwork.IsMasterClient ? "You are Host" : "Waiting for Host";
@@ -99,64 +93,66 @@ public class RoomController : MonoBehaviourPunCallbacks
 
     // ================= START GAME =================
     public void StartGame()
+{
+    if (!PhotonNetwork.IsMasterClient) return;
+
+    if (!AreAllPlayersReady())
     {
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            statusText.text = "Only Host can start!";
-            return;
-        }
-
-        if (!AreAllPlayersReady())
-        {
-            statusText.text = "All players must be READY!";
-            return;
-        }
-
-        if (isStarting || hasLoadedRoleScene) return; // กันกดซ้ำ
-        isStarting = true;
-
-        statusText.text = "Assigning roles...";
-        AssignRoles();
-
-        // ไม่เรียก LoadLevel ทันที ให้รอจน role มาครบ แล้วค่อย LoadLevel ใน callback
-        // (กันค้าง/กัน LoadLevel spam)
+        statusText.text = "All players must be READY!";
+        return;
     }
+
+    // 🔒 เช็กว่าห้องเคยสุ่ม role ไปแล้วหรือยัง
+    if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey(ROLES_ASSIGNED))
+        return;
+
+    statusText.text = "Assigning roles...";
+
+    // 🔒 ล็อกห้องทันที (กันเรียกซ้ำ)
+    PhotonNetwork.CurrentRoom.SetCustomProperties(
+        new Hashtable { { ROLES_ASSIGNED, true } }
+    );
+
+    AssignRoles();
+}
+
 
     // ================= ROLE ASSIGN =================
     void AssignRoles()
+{
+    List<Player> players = new List<Player>(PhotonNetwork.PlayerList);
+
+    int count = players.Count;
+    int impostor = Random.Range(0, count);
+
+    int sheriff = impostor;
+    if (count >= 2)
+        while (sheriff == impostor)
+            sheriff = Random.Range(0, count);
+
+    int madman = impostor;
+    if (count >= 3)
+        while (madman == impostor || madman == sheriff)
+            madman = Random.Range(0, count);
+
+    for (int i = 0; i < count; i++)
     {
-        List<Player> players = new List<Player>(PhotonNetwork.PlayerList);
-        int count = players.Count;
+        PlayerRole role = PlayerRole.Civilian;
+        if (i == impostor) role = PlayerRole.Impostor;
+        else if (i == sheriff) role = PlayerRole.Sheriff;
+        else if (i == madman) role = PlayerRole.Madman;
 
-        // ป้องกันกรณีผู้เล่นน้อยเกินไป
-        if (count <= 0) return;
-
-        int impostor = Random.Range(0, count);
-
-        int sheriff = impostor;
-        if (count >= 2)
-        {
-            while (sheriff == impostor)
-                sheriff = Random.Range(0, count);
-        }
-
-        int madman = impostor;
-        if (count >= 3)
-        {
-            while (madman == impostor || madman == sheriff)
-                madman = Random.Range(0, count);
-        }
-
-        for (int i = 0; i < count; i++)
-        {
-            PlayerRole role = PlayerRole.Civilian;
-            if (i == impostor) role = PlayerRole.Impostor;
-            else if (count >= 2 && i == sheriff) role = PlayerRole.Sheriff;
-            else if (count >= 3 && i == madman) role = PlayerRole.Madman;
-
-            players[i].SetCustomProperties(new Hashtable { { ROLE_KEY, (int)role } });
-        }
+        players[i].SetCustomProperties(
+            new Hashtable { { ROLE_KEY, (int)role } }
+        );
     }
+
+    Debug.Log("Roles assigned");
+
+    // ✅ โหลดฉากครั้งเดียวตรงนี้
+    PhotonNetwork.LoadLevel(roleRevealScene);
+}
+
 
     bool AllPlayersHaveRole()
     {
@@ -205,21 +201,6 @@ public class RoomController : MonoBehaviourPunCallbacks
         if (!isStarting) return;
         if (hasLoadedRoleScene) return;
 
-        // ถ้า role มีการเปลี่ยน และตอนนี้ครบแล้ว -> เข้า RoleRevealScene
-        if (changedProps.ContainsKey(ROLE_KEY) && AllPlayersHaveRole())
-        {
-            hasLoadedRoleScene = true;
-            isStarting = false;
-
-            statusText.text = "Loading role reveal...";
-            if (startButton != null) startButton.SetActive(false);
-            if (readyButton != null) readyButton.SetActive(false);
-
-            PhotonNetwork.CurrentRoom.IsOpen = false;
-            PhotonNetwork.CurrentRoom.IsVisible = false;
-
-            PhotonNetwork.LoadLevel(roleRevealScene);
-        }
     }
 
     // ================= BACK / LEAVE =================

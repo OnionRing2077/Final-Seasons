@@ -5,34 +5,44 @@ using UnityEngine;
 
 public class PlayerColorSetup : MonoBehaviourPunCallbacks
 {
-    private CharacterColor characterColor;
+    CharacterColor characterColor;
+
+    void Awake()
+    {
+        characterColor = GetComponent<CharacterColor>();
+    }
 
     void Start()
     {
-        characterColor = GetComponent<CharacterColor>();
-
         if (photonView.IsMine)
         {
-            int colorIndex = GetFreeColorIndex();
+            if (!PhotonNetwork.LocalPlayer.CustomProperties.ContainsKey("color"))
+            {
+                int colorIndex = GetFreeColorIndex();
 
-            Hashtable props = new Hashtable();
-            props["color"] = colorIndex;
-            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+                Hashtable props = new Hashtable
+                {
+                    { "color", colorIndex }
+                };
+
+                PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+            }
         }
 
-        ApplyColor();
+        ApplyColorIfReady();
     }
 
     public override void OnPlayerPropertiesUpdate(
         Player targetPlayer, Hashtable changedProps)
     {
-        if (changedProps.ContainsKey("color"))
+        if (targetPlayer == photonView.Owner &&
+            changedProps.ContainsKey("color"))
         {
-            ApplyColor();
+            ApplyColorIfReady();
         }
     }
 
-    void ApplyColor()
+    void ApplyColorIfReady()
     {
         if (photonView.Owner.CustomProperties.TryGetValue("color", out object value))
         {
@@ -58,6 +68,6 @@ public class PlayerColorSetup : MonoBehaviourPunCallbacks
             if (!used[i]) return i;
         }
 
-        return 0; // fallback (ไม่ควรเกิด)
+        return 0;
     }
 }
