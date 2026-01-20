@@ -37,15 +37,21 @@ public void RPC_Die(int killerActorNumber)
             Quaternion.identity
         );
 
-        DeadBodyVisual body = bodyObj.GetComponent<DeadBodyVisual>();
+        // ✅ เพิ่มตรงนี้
+        DeadBody deadBody = bodyObj.GetComponent<DeadBody>();
+        if (deadBody != null)
+        {
+            deadBody.Init(photonView.Owner.ActorNumber);
+        }
 
-        if (body != null &&
+        // 🎨 Visual (ของคุณทำถูกแล้ว)
+        DeadBodyVisual bodyVisual = bodyObj.GetComponent<DeadBodyVisual>();
+        if (bodyVisual != null &&
             photonView.Owner.CustomProperties.TryGetValue("color", out object v))
         {
             int colorIndex = (int)v;
 
-            // 🔥 ส่ง RPC ให้ทุกคน
-            body.photonView.RPC(
+            bodyVisual.photonView.RPC(
                 "RPC_SetColor",
                 RpcTarget.AllBuffered,
                 colorIndex
@@ -56,5 +62,4 @@ public void RPC_Die(int killerActorNumber)
     if (ghost != null)
         ghost.EnterGhost();
 }
-
 }

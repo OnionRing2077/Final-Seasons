@@ -10,20 +10,29 @@ public class RoleRevealController : MonoBehaviour
     public float showTime = 5f; // เวลาโชว์ Role
 
     void Start()
+{
+    StartCoroutine(WaitForRole());
+}
+
+IEnumerator WaitForRole()
+{
+    // ⏳ รอจนกว่า role จะมา
+    while (!PhotonNetwork.LocalPlayer.CustomProperties.ContainsKey("role"))
     {
-        if (!PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue("role", out object v))
-        {
-            roleText.text = "NO ROLE";
-            return;
-        }
-
-        PlayerRole role = (PlayerRole)(int)v;
-
-        roleText.text = role.ToString();
-        descriptionText.text = GetDescription(role);
-
-        StartCoroutine(AutoStart());
+        yield return null;
     }
+
+    PlayerRole role =
+        (PlayerRole)(int)PhotonNetwork.LocalPlayer.CustomProperties["role"];
+
+    roleText.text = role.ToString();
+    descriptionText.text = GetDescription(role);
+
+    Debug.Log($"[RoleReveal] ROLE = {role}");
+
+    StartCoroutine(AutoStart());
+}
+
 
     IEnumerator AutoStart()
     {

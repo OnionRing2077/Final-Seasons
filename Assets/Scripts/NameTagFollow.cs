@@ -7,24 +7,27 @@ public class NameTagFollow : MonoBehaviourPun
     public Vector3 offset = new Vector3(0, 1.4f, 0);
 
     private Transform target;
-    private TextMeshProUGUI nameText;
+    private TMP_Text nameText;
 
     void Awake()
     {
         target = transform.parent;
-        nameText = GetComponentInChildren<TextMeshProUGUI>();
+        nameText = GetComponentInChildren<TMP_Text>();
 
         if (nameText == null)
         {
-            Debug.LogError("NameTagFollow: No TextMeshProUGUI found in children!");
+            Debug.LogError("NameTagFollow: No TMP_Text found!");
             return;
         }
     }
 
-    public void SetName(string name)
+    void Start()
     {
-        if (nameText != null)
-            nameText.text = name;
+        // ✅ ตั้งชื่อทันทีตอนเริ่ม
+        if (photonView != null && photonView.Owner != null)
+        {
+            nameText.text = photonView.Owner.NickName;
+        }
     }
 
     void LateUpdate()
@@ -33,7 +36,7 @@ public class NameTagFollow : MonoBehaviourPun
 
         transform.position = target.position + offset;
 
-        // กัน name กลับด้าน
+        // กันข้อความกลับด้าน
         transform.rotation = Quaternion.identity;
         transform.localScale = Vector3.one;
     }

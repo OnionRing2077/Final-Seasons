@@ -4,7 +4,6 @@ using UnityEngine;
 public class GameManager : MonoBehaviourPunCallbacks
 {
     public Transform[] spawnPoints;
-    public RoleManager roleManager;
 
     void Start()
     {
@@ -15,23 +14,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
 
         SpawnPlayer();
-
-        if (PhotonNetwork.IsMasterClient)
-        {
-            Invoke(nameof(AssignRolesDelayed), 1f);
-        }
-    }
-
-    void AssignRolesDelayed()
-    {
-        if (roleManager == null)
-        {
-            Debug.LogError("RoleManager is NULL! ใส่ RoleManager ใน GameManager");
-            return;
-        }
-
-        roleManager.AssignRoles();
-        PhotonNetwork.LoadLevel("RoleRevealScene");
     }
 
     void SpawnPlayer()
@@ -49,7 +31,6 @@ public class GameManager : MonoBehaviourPunCallbacks
             Quaternion.identity
         );
 
-        // ⭐ สำคัญ: ใช้ TagObject สำหรับ RoleManager
         PhotonNetwork.LocalPlayer.TagObject = player;
     }
 }

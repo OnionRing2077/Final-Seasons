@@ -1,8 +1,14 @@
 using UnityEngine;
 using Photon.Pun;
+using TMPro;
+using UnityEngine.UI;
 
 public class PlayerKill : MonoBehaviourPun
-{
+{   
+    [Header("UI")]
+    public Button killButton;
+    public TMP_Text cooldownText;
+
     [Header("Kill Settings")]
     public float killCooldown = 20f;
     public float killRange = 1.5f;
@@ -39,7 +45,7 @@ public float GetCooldown01()
 
     return 1f - (GetCooldownLeft() / killCooldown);
 }
-
+    
     // =========================
     // ✅ เช็คว่ากดปุ่มฆ่าได้ไหม
     // =========================
@@ -49,11 +55,16 @@ public float GetCooldown01()
     if (myHealth.IsDead) return false;
     if (ghostMode.IsGhost) return false;
 
+    // ⏱️ เช็คคูลดาวน์
+    if (Time.time < lastKillTime + killCooldown)
+        return false;
+
     Debug.Log($"CanKill? role={myId.Role} mine={photonView.IsMine}");
 
     return myId.Role == PlayerRole.Impostor ||
            myId.Role == PlayerRole.Sheriff;
 }
+
 
     // =========================
     // 🔪 กดฆ่า
@@ -154,6 +165,36 @@ public float GetCooldown01()
 
         return null;
     }
+    
+    void Update()
+{
+    if (!photonView.IsMine) return;
+
+    float cdLeft = GetCooldownLeft();
+
+    // ⏱️ กำลัง cooldown
+    if (cdLeft > 0f)
+    {
+        if (killButton) killButton.interactable = false;
+
+        if (cooldownText)
+        {
+            cooldownText.gameObject.SetActive(true);
+            cooldownText.text = Mathf.CeilToInt(cdLeft).ToString();
+        }
+    }
+    // ✅ ฆ่าได้แล้ว
+    else
+    {
+        if (killButton) killButton.interactable = CanKill();
+
+        if (cooldownText)
+        {
+            cooldownText.text = "";
+            cooldownText.gameObject.SetActive(false);
+        }
+    }
+}
 
     void OnDrawGizmosSelected()
     {

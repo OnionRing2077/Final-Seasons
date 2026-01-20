@@ -17,7 +17,7 @@ public class GhostMode : MonoBehaviourPun
     SpriteRenderer[] renderers;
 
     PlayerKill kill;
-    BodyReport report;
+    DeadBody report;
     VisionController vision;
 
     void Awake()
@@ -27,7 +27,7 @@ public class GhostMode : MonoBehaviourPun
         renderers = GetComponentsInChildren<SpriteRenderer>(true);
 
         kill = GetComponent<PlayerKill>();
-        report = GetComponent<BodyReport>();
+        report = GetComponent<DeadBody>();
         vision = GetComponent<VisionController>();
     }
 
