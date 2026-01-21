@@ -57,21 +57,25 @@ public class PlayerReport : MonoBehaviourPun
     }
 
     [PunRPC]
-    void RPC_Report(int bodyViewID, int reporterActor)
+void RPC_Report(int bodyViewID, int reporterActor)
+{
+    PhotonView bodyView = PhotonView.Find(bodyViewID);
+    if (bodyView == null) return;
+
+    DeadBody body = bodyView.GetComponent<DeadBody>();
+    if (body == null || body.isReported) return;
+
+    body.isReported = true;
+
+    Debug.Log($"REPORT by Actor {reporterActor}");
+
+    // ✅ ให้ Host โหลดฉากประชุม
+    if (PhotonNetwork.IsMasterClient)
     {
-        PhotonView bodyView = PhotonView.Find(bodyViewID);
-        if (bodyView == null) return;
-
-        DeadBody body = bodyView.GetComponent<DeadBody>();
-        if (body == null || body.isReported) return;
-
-        body.isReported = true;
-
-        Debug.Log($"REPORT by Actor {reporterActor}");
-
-        // ⏸ เข้าประชุม
-        MeetingManager.Instance.StartMeeting(reporterActor, body.ownerActor);
+        PhotonNetwork.LoadLevel("MeetingScene");
     }
+}
+
 
     void OnDrawGizmosSelected()
     {

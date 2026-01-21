@@ -25,7 +25,8 @@ IEnumerator WaitForRole()
     PlayerRole role =
         (PlayerRole)(int)PhotonNetwork.LocalPlayer.CustomProperties["role"];
 
-    roleText.text = role.ToString();
+    roleText.text = GetRoleName(role);
+
     descriptionText.text = GetDescription(role);
 
     Debug.Log($"[RoleReveal] ROLE = {role}");
@@ -54,4 +55,19 @@ IEnumerator WaitForRole()
                 return "Complete tasks and survive.";
         }
     }
+    string GetRoleName(PlayerRole role)
+{
+    switch (role)
+    {
+        case PlayerRole.Impostor:
+            return "DarkWizard";
+        case PlayerRole.Sheriff:
+            return "LightMagician";
+        case PlayerRole.Madman:
+            return "ChaoticConjurer";
+        default:
+            return "Magician";
+    }
+}
+
 }

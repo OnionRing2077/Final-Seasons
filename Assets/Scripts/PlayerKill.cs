@@ -89,9 +89,10 @@ public float GetCooldown01()
         if (myId.Role == PlayerRole.Impostor)
         {
             target.photonView.RPC(
-                "RPC_Die",
+                "RPC_KillAndSnap",
                 RpcTarget.All,
-                photonView.Owner.ActorNumber
+                photonView.ViewID,
+                target.photonView.ViewID
             );
             return;
         }
@@ -105,9 +106,10 @@ public float GetCooldown01()
             if (targetId.Role == PlayerRole.Impostor)
             {
                 target.photonView.RPC(
-                    "RPC_Die",
+                    "RPC_KillAndSnap",
                     RpcTarget.All,
-                    photonView.Owner.ActorNumber
+                    photonView.ViewID,
+                    target.photonView.ViewID
                 );
                 return;
             }
@@ -116,24 +118,27 @@ public float GetCooldown01()
             if (targetId.Role == PlayerRole.Madman)
             {
                 target.photonView.RPC(
-                    "RPC_Die",
+                    "RPC_KillAndSnap",
                     RpcTarget.All,
-                    photonView.Owner.ActorNumber
+                    photonView.ViewID,
+                    target.photonView.ViewID
                 );
                 return;
             }
 
             // ยิงคนดี / Sheriff → ตายคู่ (Sheriff พลาด)
             target.photonView.RPC(
-                "RPC_Die",
+                "RPC_KillAndSnap",
                 RpcTarget.All,
-                photonView.Owner.ActorNumber
+                photonView.ViewID,
+                target.photonView.ViewID
             );
 
             photonView.RPC(
-                "RPC_Die",
+                "RPC_KillAndSnap",
                 RpcTarget.All,
-                photonView.Owner.ActorNumber
+                photonView.ViewID,
+                target.photonView.ViewID
             );
         }
     }
@@ -165,7 +170,28 @@ public float GetCooldown01()
 
         return null;
     }
-    
+    [PunRPC]
+void RPC_KillAndSnap(int killerViewID, int targetViewID)
+{
+    PhotonView killerView = PhotonView.Find(killerViewID);
+    PhotonView targetView = PhotonView.Find(targetViewID);
+
+    if (killerView == null || targetView == null) return;
+
+    Transform killer = killerView.transform;
+    Transform target = targetView.transform;
+
+    // ✅ ขยับตัวฆ่าไปตำแหน่งเหยื่อ (ทุก Client)
+    killer.position = target.position;
+
+    // 🔪 ฆ่าเหยื่อ
+    PlayerHealth targetHealth = targetView.GetComponent<PlayerHealth>();
+    if (targetHealth != null)
+    {
+        targetHealth.RPC_Die(killerView.Owner.ActorNumber);
+    }
+}
+
     void Update()
 {
     if (!photonView.IsMine) return;
