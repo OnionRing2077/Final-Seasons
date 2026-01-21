@@ -11,4 +11,14 @@ public class DeadBody : MonoBehaviourPun
         ownerActor = actorNumber;
         isReported = false;
     }
+
+    void Awake()
+    {
+        if (GetComponent<Collider2D>() == null)
+        {
+            var col = gameObject.AddComponent<BoxCollider2D>();
+            col.isTrigger = true; // Make it a trigger so players can walk over it
+            col.size = new Vector2(1f, 1f); // Default size
+        }
+    }
 }

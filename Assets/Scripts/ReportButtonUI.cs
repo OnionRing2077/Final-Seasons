@@ -55,13 +55,22 @@ public class ReportButtonUI : MonoBehaviour
         if (reportButton)
         {
             bool canReport = localBodyReport.CanReport;
-            reportButton.interactable = canReport;
+            if (reportButton.interactable != canReport)
+            {
+                // Debug log status change only
+                // Debug.Log($"Report Button State Changed: {canReport}");
+                reportButton.interactable = canReport;
+            }
         }
     }
 
     void OnReportPressed()
     {
         Debug.Log("Report Button Pressed");
+        
+        // 🔊 Sound Feedback Immediately
+        SFXManager.Instance?.PlayVote();
+
         if (localBodyReport != null)
         {
             localBodyReport.TryReport();

@@ -11,6 +11,15 @@ public class WinManager : MonoBehaviourPun
         Instance = this;
     }
 
+    void Start()
+    {
+        // Check immediately when scene loads (e.g. returning from Meeting)
+        if (PhotonNetwork.IsMasterClient)
+        {
+            CheckWinConditions();
+        }
+    }
+
     // ==============================
     // เรียกหลังมีคนตาย / โหวต
     // ==============================
@@ -21,7 +30,7 @@ public class WinManager : MonoBehaviourPun
 
         foreach (Player p in PhotonNetwork.PlayerList)
         {
-            if (!p.CustomProperties.TryGetValue("dead", out object d) ||
+            if (!p.CustomProperties.TryGetValue("IsDead", out object d) ||
                 (bool)d == true)
                 continue;
 
@@ -37,6 +46,13 @@ public class WinManager : MonoBehaviourPun
         if (impostorAlive >= goodAlive && impostorAlive > 0)
         {
             EndGame(GameResult.ImpostorWin);
+            return;
+        }
+
+        // 🟢 Civilian ชนะ (ถ้าไม่มี Impostor เหลือแล้ว)
+        if (impostorAlive == 0)
+        {
+            EndGame(GameResult.CivilianWin);
             return;
         }
     }
@@ -76,7 +92,17 @@ public class WinManager : MonoBehaviourPun
     void RPC_EndGame(GameResult result)
     {
         Debug.Log("GAME OVER: " + result);
-        // 👉 TODO: เปิด Win Screen UI
-        // SceneManager.LoadScene("WinScene");
+        
+        if (WinScreenUI.Instance != null)
+        {
+            WinScreenUI.Instance.ShowWin(result);
+        }
+        else
+        {
+            // Fallback if no UI in scene (create one dynamically or just log)
+            Debug.LogError("No WinScreenUI found! Creating temporary...");
+            GameObject go = new GameObject("WinScreenUI");
+            go.AddComponent<WinScreenUI>().ShowWin(result);
+        }
     }
 }

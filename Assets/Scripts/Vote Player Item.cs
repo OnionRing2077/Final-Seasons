@@ -18,6 +18,22 @@ public class VotePlayerItem : MonoBehaviour
 
     private Photon.Realtime.Player _targetPlayer;
 
+    void Awake()
+    {
+        // Auto-find references if missing (Robustness)
+        if (_playerNameText == null)
+        {
+            var t = transform.Find("[PLAYER NAME]");
+            if(t) _playerNameText = t.GetComponent<TMP_Text>();
+        }
+
+        if (_playerStatusText == null)
+        {
+            var t = transform.Find("[PLAYER STATUS]");
+            if(t) _playerStatusText = t.GetComponent<TMP_Text>();
+        }
+    }
+
     public void Initialize(Photon.Realtime.Player player, bool isDead)
     {
         try
@@ -127,15 +143,18 @@ public class VotePlayerItem : MonoBehaviour
         if (_reporterBadge) _reporterBadge.SetActive(isReporter);
     }
 
-    public void AddVoter(Sprite voterSprite)
+    public void AddVoter(Color voterColor)
     {
         if (_voterIconPrefab && _voterContainer)
         {
             GameObject iconObj = Instantiate(_voterIconPrefab, _voterContainer);
             Image icon = iconObj.GetComponent<Image>();
-            if (icon == null) icon = iconObj.GetComponentInChildren<Image>(); // กันเหนียวเผื่ออยู่ลูก
+            if (icon == null) icon = iconObj.GetComponentInChildren<Image>(); 
 
-            if (icon != null && voterSprite != null) icon.sprite = voterSprite;
+            if (icon != null) 
+            {
+                icon.color = voterColor;
+            }
             iconObj.SetActive(true);
         }
     }

@@ -189,6 +189,9 @@ void RPC_KillAndSnap(int killerViewID, int targetViewID)
     if (targetHealth != null)
     {
         targetHealth.RPC_Die(killerView.Owner.ActorNumber);
+        
+        // 🔊 Sound
+        SFXManager.Instance?.PlayKill();
     }
 }
 

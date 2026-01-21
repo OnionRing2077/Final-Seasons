@@ -14,7 +14,7 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
     [Header("UI References")]
     [SerializeField] private GameObject _emergencyMeetingWindow;
     [SerializeField] private Button _skipVoteBtn;
-    [SerializeField] private VotePlayerItem _votePlayerItemPrefab; 
+    [SerializeField] private GameObject _votePlayerItemPrefab; // Changed from VotePlayerItem to GameObject
     [SerializeField] private Transform _votePlayerItemContainer;
     [SerializeField] private TMP_Text _resultText; 
     [SerializeField] private TMP_Text _timerText; 
@@ -152,9 +152,11 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
 
         for (int i = 0; i < fakeNames.Length; i++)
         {
-            VotePlayerItem newItem = Instantiate(_votePlayerItemPrefab, _votePlayerItemContainer);
+            GameObject itemObj = Instantiate(_votePlayerItemPrefab, _votePlayerItemContainer);
+            VotePlayerItem newItem = itemObj.GetComponent<VotePlayerItem>();
+
             if (newItem == null) {
-                Debug.LogError($"VotePlayerManager: Failed to instantiate Mock Player {i}");
+                Debug.LogError($"VotePlayerManager: Prefab does not have VotePlayerItem script!");
                 continue;
             }
             
@@ -175,10 +177,13 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
     
     private void CreatePlayerItem(Photon.Realtime.Player player, bool isDead, bool isReporter)
     {
-        VotePlayerItem newItem = Instantiate(_votePlayerItemPrefab, _votePlayerItemContainer);
+        GameObject itemObj = Instantiate(_votePlayerItemPrefab, _votePlayerItemContainer);
+        VotePlayerItem newItem = itemObj.GetComponent<VotePlayerItem>();
+        
+        if (newItem == null) return;
         
         // Pass isDead status
-        newItem.Initialize(player, isDead); 
+        newItem.Initialize(player, isDead);  
         
         newItem.ShowReporterStatus(isReporter);
 
@@ -340,16 +345,28 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
             Photon.Realtime.Player voter = PhotonNetwork.CurrentRoom.GetPlayer(voterId);
             if(voter == null) continue;
 
+            // Get Voter Color
+            int colorIndex = 0;
+            if(voter.CustomProperties.TryGetValue("color", out object cBox)) 
+                colorIndex = (int)cBox;
+            
+            Color voterColor = Color.white;
+            if (colorIndex >= 0 && colorIndex < PlayerColors.Colors.Length)
+                voterColor = PlayerColors.Colors[colorIndex];
+
             if (targetId == -1)
             {
+                 // Skip Vote Visual
                  if(_voterIconPrefab && _skipVoterContainer)
                  {
                      Image icon = Instantiate(_voterIconPrefab, _skipVoterContainer);
+                     icon.color = voterColor;
+                     icon.gameObject.SetActive(true);
                  }
             }
             else if (_createdVoteItems.ContainsKey(targetId))
             {
-                _createdVoteItems[targetId].AddVoter(null); 
+                _createdVoteItems[targetId].AddVoter(voterColor); 
             }
         }
 

@@ -12,8 +12,8 @@ public class SettingsMenuController : MonoBehaviour
 
     void Start()
     {
-        settingUI.SetActive(false);   // เริ่มเกมซ่อน Settings
-        ShowSound();
+        // 🛠 Fix: Ensure everything is hidden at start
+        CloseSettings();
     }
 
     // ---------- OPEN / CLOSE ----------
@@ -26,27 +26,32 @@ public class SettingsMenuController : MonoBehaviour
     public void CloseSettings()
     {
         settingUI.SetActive(false);
+        
+        // Optional: Hide all internal panels too to be safe
+        if(panelSound) panelSound.SetActive(false);
+        if(panelControl) panelControl.SetActive(false);
+        if(panelExit) panelExit.SetActive(false);
     }
 
     // ---------- Tabs ----------
     public void ShowSound()
     {
-        panelSound.SetActive(true);
-        panelControl.SetActive(false);
-        panelExit.SetActive(false);
+        if(panelSound) panelSound.SetActive(true);
+        if(panelControl) panelControl.SetActive(false);
+        if(panelExit) panelExit.SetActive(false);
     }
 
     public void ShowControl()
     {
-        panelSound.SetActive(false);
-        panelControl.SetActive(true);
-        panelExit.SetActive(false);
+        if(panelSound) panelSound.SetActive(false);
+        if(panelControl) panelControl.SetActive(true);
+        if(panelExit) panelExit.SetActive(false);
     }
 
     public void ShowExit()
     {
-        panelSound.SetActive(false);
-        panelControl.SetActive(false);
-        panelExit.SetActive(true);
+        if(panelSound) panelSound.SetActive(false);
+        if(panelControl) panelControl.SetActive(false);
+        if(panelExit) panelExit.SetActive(true);
     }
 }

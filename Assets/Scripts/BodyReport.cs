@@ -10,6 +10,21 @@ public class BodyReport : MonoBehaviourPun
 
     public bool CanReport { get; private set; }
 
+    PlayerHealth myHealth;
+    GhostMode ghostMode;
+
+    void Awake()
+    {
+        myHealth = GetComponent<PlayerHealth>();
+        ghostMode = GetComponent<GhostMode>();
+    }
+
+    void Start()
+    {
+        if (targetLayers.value == 0)
+            targetLayers = Physics2D.AllLayers;
+    }
+
     void Update()
     {
         if (!photonView.IsMine) return;
@@ -25,31 +40,30 @@ public class BodyReport : MonoBehaviourPun
 
     private bool CheckIfBodyNearby()
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, reportRange, targetLayers);
+        if (myHealth != null && myHealth.IsDead) return false;
+        if (ghostMode != null && ghostMode.IsGhost) return false;
+
+        // Use AllLayers to debug what we are actually hitting
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, reportRange);
         
-        // Debug Log to see what we are hitting (remove later)
-        if (hits.Length > 0) {
-             // Uncomment if you want to see everything around:
-             // Debug.Log($"BodyReport: Hitting {hits.Length} objects");
-        }
+        // Debug.Log($"Checking Nearby... Hits: {hits.Length}");
 
         foreach (var hit in hits)
         {
-            // Debug specific hit
-            // Debug.Log("Checking collision: " + hit.gameObject.name);
+            // Debug.Log($"Hit: {hit.name} | Layer: {LayerMask.LayerToName(hit.gameObject.layer)}");
 
             // Check for PlayerHealth (Legacy)
             PlayerHealth body = hit.GetComponent<PlayerHealth>();
             if (body != null && body.IsDead) 
             {
-                Debug.Log("Found Dead PlayerHealth: " + hit.name);
+                // Debug.Log("FOUND DEAD PLAYER (Health)");
                 return true;
             }
 
             // Check for DeadBody (New)
             if (hit.GetComponent<DeadBody>()) 
             {
-                Debug.Log("Found DeadBody Component: " + hit.name);
+                // Debug.Log("FOUND DEAD BODY (Script)");
                 return true;
             }
         }
@@ -58,11 +72,13 @@ public class BodyReport : MonoBehaviourPun
 
     public void TryReport()
     {
-        if (!CanReport) 
-        {
-            Debug.Log("TryReport Failed: CanReport is false");
-            return;
-        }
+        if (!CanReport) return;
+
+        if (myHealth != null && myHealth.IsDead) return;
+        if (ghostMode != null && ghostMode.IsGhost) return;
+        
+        // 🔊 Sound
+        SFXManager.Instance?.PlayVote();
 
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, reportRange, targetLayers);
 
@@ -84,16 +100,16 @@ public class BodyReport : MonoBehaviourPun
             if (foundBody)
             {
                 Debug.Log("Reporting Body: " + hit.name);
-                photonView.RPC("RPC_Report", RpcTarget.MasterClient);
+                photonView.RPC("RPC_TriggerMeeting", RpcTarget.MasterClient);
                 break;
             }
         }
     }
 
     [PunRPC]
-    void RPC_Report(PhotonMessageInfo info)
+    void RPC_TriggerMeeting(PhotonMessageInfo info)
     {
-        Debug.Log("RPC_Report Received! Loading Scene: " + meetingScene);
+        Debug.Log("RPC_TriggerMeeting Received! Loading Scene: " + meetingScene);
         // Save who reported
         ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
         props["ReporterActorNumber"] = info.Sender.ActorNumber;

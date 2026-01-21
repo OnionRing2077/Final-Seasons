@@ -18,10 +18,21 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
     void Start()
     {
-        if (!PhotonNetwork.IsConnected)
+        if (PhotonNetwork.InLobby)
+        {
+            // If already in lobby (e.g. came back from game), force ready state
+            OnJoinedLobby();
+        }
+        else if (PhotonNetwork.IsConnectedAndReady)
+        {
+            // Connected but not in lobby yet
+            PhotonNetwork.JoinLobby();
+            statusText.text = "Joining Lobby...";
+        }
+        else if (!PhotonNetwork.IsConnected)
         {
             statusText.text = "Connecting to server...";
-            
+            PhotonNetwork.ConnectUsingSettings();
         }
     }
 
