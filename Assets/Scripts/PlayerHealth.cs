@@ -61,5 +61,9 @@ public void RPC_Die(int killerActorNumber)
 
     if (ghost != null)
         ghost.EnterGhost();
+    // Set Custom Property so other scenes know this player is dead
+    ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
+    props["IsDead"] = true;
+    PhotonNetwork.LocalPlayer.SetCustomProperties(props);
 }
 }
