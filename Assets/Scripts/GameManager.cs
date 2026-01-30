@@ -4,7 +4,6 @@ using UnityEngine;
 public class GameManager : MonoBehaviourPunCallbacks
 {
     public Transform[] spawnPoints;
-
     void Start()
     {
         if (!PhotonNetwork.IsConnected)

@@ -65,5 +65,23 @@ public void RPC_Die(int killerActorNumber)
     ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
     props["IsDead"] = true;
     PhotonNetwork.LocalPlayer.SetCustomProperties(props);
-}
+    }
+
+    [PunRPC]
+    public void RPC_Eject()
+    {
+        if (IsDead) return;
+        IsDead = true;
+
+        // Ejected players turn into ghosts immediately, but DO NOT spawn a dead body.
+        if (ghost != null)
+            ghost.EnterGhost();
+
+        // Set Custom Property so other scenes know this player is dead
+        ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
+        props["IsDead"] = true;
+        PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+        
+        Debug.Log("Player EJECTED (Ghost Mode entered, No Body spawned)");
+    }
 }

@@ -39,6 +39,13 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning($"VotePlayerManager: Duplicate detected! Destroying {gameObject.name}");
+            Destroy(gameObject);
+            return;
+        }
+
         Instance = this;
         if (_emergencyMeetingWindow) _emergencyMeetingWindow.SetActive(false);
     }
@@ -52,7 +59,10 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
             _currentTimer -= Time.deltaTime;
             if (_timerText) _timerText.text = Mathf.CeilToInt(_currentTimer).ToString();
 
-            if (PhotonNetwork.IsMasterClient && _currentTimer <= 0)
+            // Fix: Allow offline mode/debug mode to trigger end as well
+            bool shouldEnd = PhotonNetwork.IsMasterClient || PhotonNetwork.CurrentRoom == null || _forceDebugMode;
+
+            if (shouldEnd && _currentTimer <= 0)
             {
                 ForceEndVoting();
             }
@@ -62,12 +72,92 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
     private void Start()
     {
         // Auto-start the meeting when this scene loads
+        ValidateReferences();
         StartMeeting();
+    }
+
+    private void ValidateReferences()
+    {
+        if (_emergencyMeetingWindow == null)
+        {
+            Debug.LogWarning("VotePlayerManager: Emergency Window is NULL! Attempting to find 'EmergencyMeetingWindow'...");
+            Debug.LogWarning("VotePlayerManager: Emergency Window is NULL! Attempting to find 'EmergencyMeetingWindow'...");
+            _emergencyMeetingWindow = GameObject.Find("EmergencyMeetingWindow");
+            if (_emergencyMeetingWindow == null) _emergencyMeetingWindow = GameObject.Find("Emergency Meeting Window"); // Added space
+            if (_emergencyMeetingWindow == null) _emergencyMeetingWindow = FindDeep(transform.root, "EmergencyMeetingWindow")?.gameObject;
+            if (_emergencyMeetingWindow == null) _emergencyMeetingWindow = FindDeep(transform.root, "Emergency Meeting Window")?.gameObject; // Added space
+            if (_emergencyMeetingWindow == null) _emergencyMeetingWindow = transform.Find("Canvas/EmergencyMeetingUI/EmergencyMeetingWindow")?.gameObject;
+            
+            // Fallback: Check MeetingManager
+            if (_emergencyMeetingWindow == null && MeetingManager.Instance != null)
+            {
+                _emergencyMeetingWindow = MeetingManager.Instance.meetingUI;
+                Debug.Log("VotePlayerManager: Found Emergency Window via MeetingManager!");
+            }
+
+        }
+
+        if (_votePlayerItemContainer == null)
+        {
+            if (_votePlayerItemContainer == null) _votePlayerItemContainer = FindDeep(transform.root, "VotePlayerItemContainer");
+            if (_votePlayerItemContainer == null) _votePlayerItemContainer = FindDeep(transform.root, "Content"); // Common name
+            if (_votePlayerItemContainer == null) _votePlayerItemContainer = FindDeep(transform.root, "Voting"); // Found in screenshot
+            if (_votePlayerItemContainer == null) _votePlayerItemContainer = FindDeep(transform.root, "PlayerList");
+        }
+
+        if (_skipVoteBtn == null)
+        {
+             Debug.LogWarning("VotePlayerManager: Skip Vote Button is NULL! Searching recursively...");
+             var obj = FindDeep(transform.root, "SkipVoteButton");
+             if (obj) _skipVoteBtn = obj.GetComponent<Button>();
+        }
+
+        if (_skipVoterContainer == null)
+        {
+            var obj = FindDeep(transform.root, "SkipVoterContainer");
+            if (obj) _skipVoterContainer = obj;
+        }
+
+        if (_resultText == null)
+        {
+             var obj = FindDeep(transform.root, "ResultText");
+             if (obj) _resultText = obj.GetComponent<TMP_Text>();
+        }
+
+        if (_timerText == null)
+        {
+             var obj = FindDeep(transform.root, "TimerText");
+             if (obj == null) obj = FindDeep(transform.root, "Timer Text"); // Spaces
+             if (obj == null) obj = FindDeep(transform.root, "TimeText");
+             if (obj == null) obj = FindDeep(transform.root, "Timer");
+             if (obj == null) obj = FindDeep(transform.root, "Time");
+             
+             if (obj) _timerText = obj.GetComponent<TMP_Text>();
+        }
+
+        // Try to find the Prefab in Resources if it's completely null? 
+        // No, that's too dangerous. But we can warn louder.
+        if (_votePlayerItemPrefab == null)
+        {
+            Debug.LogWarning("VotePlayerManager: Prefab is NULL. Attempting to load 'VotePlayerItem' from Resources folder...");
+            _votePlayerItemPrefab = Resources.Load<GameObject>("VotePlayerItem");
+            
+            if (_votePlayerItemPrefab == null)
+            {
+                 Debug.LogError("VotePlayerManager: CRITICAL ERROR - Could not find 'VotePlayerItem' in Resources folder! Please move 'VotePlayerItem.prefab' into a folder named 'Resources'.");
+            }
+        }
+
+
     }
 
     public void StartMeeting()
     {
         Debug.Log("VotePlayerManager: StartMeeting() CALLED!");
+        
+        // Ensure game is not paused
+        Time.timeScale = 1f; 
+
         if(_emergencyMeetingWindow) _emergencyMeetingWindow.SetActive(true);
         else Debug.LogError("VotePlayerManager: Emergency Window is NULL!");
 
@@ -75,6 +165,18 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
         _isInResultsPhase = false;
         _allVotes.Clear();
         _currentTimer = _votingDuration;
+
+        // Force initial update
+        if (_timerText) 
+        {
+            _timerText.gameObject.SetActive(true);
+            _timerText.text = Mathf.CeilToInt(_currentTimer).ToString();
+            Debug.Log($"VotePlayerManager: Timer Initialized to {_currentTimer}");
+        }
+        else
+        {
+             Debug.LogError("VotePlayerManager: TimerText is NULL! Countdown will not be visible.");
+        }
 
         bool amIDead = IsLocalPlayerDead();
         
@@ -88,6 +190,11 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
         {
             foreach(Transform child in _skipVoterContainer) Destroy(child.gameObject);
         }
+        
+        // Final sanity check for container
+        if (_skipVoterContainer == null)
+            Debug.LogWarning("VotePlayerManager: SkipVoterContainer is NULL! Skip votes will not show icons.");
+
 
         PopulatePlayerList();
     }
@@ -110,9 +217,12 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
         }
 
         // 1. Clear existing items (Placeholders)
-        foreach (Transform child in _votePlayerItemContainer)
+        if (_votePlayerItemContainer != null)
         {
-            Destroy(child.gameObject);
+            foreach (Transform child in _votePlayerItemContainer)
+            {
+                Destroy(child.gameObject);
+            }
         }
         _createdVoteItems.Clear();
 
@@ -156,8 +266,8 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
             VotePlayerItem newItem = itemObj.GetComponent<VotePlayerItem>();
 
             if (newItem == null) {
-                Debug.LogError($"VotePlayerManager: Prefab does not have VotePlayerItem script!");
-                continue;
+                Debug.LogError($"VotePlayerManager: Prefab missing VotePlayerItem script! Attempting to add it...");
+                newItem = itemObj.AddComponent<VotePlayerItem>();
             }
             
             // For mock, we pass null player. The Item script handles null and shows "Mock Player".
@@ -167,7 +277,11 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
             // Or just let it be generic for now to prove it works.
             
             bool isDead = fakeNames[i].Contains("Dead");
-            newItem.Initialize(null, isDead);
+            // Use negative IDs for mocks to distinguish from real actors (usually > 0)
+            int mockId = -100 - i; 
+            newItem.Initialize(null, isDead, mockId);
+            
+            _createdVoteItems.Add(mockId, newItem); // Track it so we can show results
             Debug.Log($"VotePlayerManager: Created Mock Player {i} ({fakeNames[i]})");
             
             // Manual text override for testing (if fields are public, but they are private serialized)
@@ -177,10 +291,23 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
     
     private void CreatePlayerItem(Photon.Realtime.Player player, bool isDead, bool isReporter)
     {
+        if (_votePlayerItemPrefab == null)
+        {
+             Debug.LogError("VotePlayerManager: Cannot create player item because Prefab is NULL!");
+             return;
+        }
+
         GameObject itemObj = Instantiate(_votePlayerItemPrefab, _votePlayerItemContainer);
         VotePlayerItem newItem = itemObj.GetComponent<VotePlayerItem>();
         
-        if (newItem == null) return;
+        if (newItem == null) 
+        {
+             Debug.LogError($"VotePlayerManager: Prefab missing VotePlayerItem script! Attempting to add it...");
+             newItem = itemObj.AddComponent<VotePlayerItem>();
+        }
+        
+        // Ensure proper scaling/parenting
+        itemObj.transform.localScale = Vector3.one;
         
         // Pass isDead status
         newItem.Initialize(player, isDead);  
@@ -260,16 +387,39 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
             if (p.CustomProperties.TryGetValue("IsDead", out object d)) isDead = (bool)d;
             if (!isDead) livingCount++;
         }
+        
+        // Debug/Local Override: If we have mock items and NO real players (or debug mode)
+        if (livingCount == 0 && _createdVoteItems.Count > 0)
+        {
+             livingCount = _createdVoteItems.Count(x => !x.Value.IsDeadForLogic()); 
+             // Need to expose IsDead helper in Item or just count manually
+             // For simplicity, let's just count all items minus known dead
+             livingCount = 0;
+             foreach(var kvp in _createdVoteItems)
+             {
+                 // If ID < -1, it's mock
+                 if (kvp.Key <= -100) 
+                 {
+                     // Check dead status from name or stored flag? 
+                     // We passed isDead to Initialize. Let's assume alive for test or stored in item.
+                     // Actually, we can just check if item interactable? No.
+                     livingCount++; 
+                 }
+             }
+             if (livingCount == 0) livingCount = 1; // Fallback
+        }
 
         if (_allVotes.Count >= livingCount)
         {
-            ForceEndVoting(); 
+            // ForceEndVoting(); // CHANGED: Wait for timer to expire instead of ending immediately
+            Debug.Log("VotePlayerManager: All votes received. Waiting for timer...");
         }
     }
 
     private void ForceEndVoting()
     {
         if (_isInResultsPhase) return;
+        _isInResultsPhase = true; // Fix: Stop update loop immediately
         CalculateVotesAndShowResults();
     }
 
@@ -317,104 +467,68 @@ public class VotePlayerManager : MonoBehaviourPunCallbacks
             isTie = true; 
         }
 
-        if (isTie) ejectedPlayerId = -2; 
-        
-        // Offline / Mock Mode Check
-        if (PhotonNetwork.CurrentRoom == null || photonView == null)
+        if (isTie) ejectedPlayerId = -2;
+
+        // Transition Logic: Set Properties -> Load Scene
+        if (PhotonNetwork.IsMasterClient)
         {
-             Debug.Log("VotePlayerManager: Offline Mode - Bypassing RPC for ShowResults.");
-             ShowResultsPhaseRPC(ejectedPlayerId);
+            bool isSkip = (ejectedPlayerId < 0);
+            
+            ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
+            props["Vote_IsSkip"] = isSkip;
+            props["Vote_EjectedID"] = ejectedPlayerId;
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+
+            // Handle Ejection (Data Logic)
+            if (!isSkip)
+            {
+                Photon.Realtime.Player target = PhotonNetwork.CurrentRoom.GetPlayer(ejectedPlayerId);
+                if (target != null)
+                {
+                    ExitGames.Client.Photon.Hashtable deadProp = new ExitGames.Client.Photon.Hashtable();
+                    deadProp["IsDead"] = true;
+                    target.SetCustomProperties(deadProp);
+                }
+            }
+
+            PhotonNetwork.LoadLevel("EndVoteScene");
         }
-        else
+        else if (PhotonNetwork.CurrentRoom == null)
         {
-             photonView.RPC("ShowResultsPhaseRPC", RpcTarget.All, ejectedPlayerId);
+            // Offline Fallback
+            Debug.Log($"VotePlayerManager Offline: Result Ejected={ejectedPlayerId}. Loading EndVoteScene...");
+             // Note: Offline mode won't have properties synced, so EndVoteScene might need mock data logic
+             // But for now we just load.
+             UnityEngine.SceneManagement.SceneManager.LoadScene("EndVoteScene");
         }
     }
 
+    /* 
+    // OLD LOGIC - COMMENTED OUT FOR NEW SCENE FLOW
     [PunRPC]
     public void ShowResultsPhaseRPC(int ejectedPlayerId)
     {
-        _isInResultsPhase = true;
-        _currentTimer = 0; 
-        
-        foreach(var kvp in _allVotes)
-        {
-            int voterId = kvp.Key;
-            int targetId = kvp.Value;
-
-            Photon.Realtime.Player voter = PhotonNetwork.CurrentRoom.GetPlayer(voterId);
-            if(voter == null) continue;
-
-            // Get Voter Color
-            int colorIndex = 0;
-            if(voter.CustomProperties.TryGetValue("color", out object cBox)) 
-                colorIndex = (int)cBox;
-            
-            Color voterColor = Color.white;
-            if (colorIndex >= 0 && colorIndex < PlayerColors.Colors.Length)
-                voterColor = PlayerColors.Colors[colorIndex];
-
-            if (targetId == -1)
-            {
-                 // Skip Vote Visual
-                 if(_voterIconPrefab && _skipVoterContainer)
-                 {
-                     Image icon = Instantiate(_voterIconPrefab, _skipVoterContainer);
-                     icon.color = voterColor;
-                     icon.gameObject.SetActive(true);
-                 }
-            }
-            else if (_createdVoteItems.ContainsKey(targetId))
-            {
-                _createdVoteItems[targetId].AddVoter(voterColor); 
-            }
-        }
-
-        if (_resultText)
-        {
-            if (ejectedPlayerId == -1) _resultText.text = "Skipped (No one ejected)";
-            else if (ejectedPlayerId == -2) _resultText.text = "Tie (No one ejected)";
-            else 
-            {
-                Photon.Realtime.Player ejected = PhotonNetwork.CurrentRoom.GetPlayer(ejectedPlayerId);
-                _resultText.text = ejected.NickName + " was ejected.";
-            }
-        }
-
-        StartCoroutine(EndMeetingCoroutine(ejectedPlayerId));
+        // ... (Original Code)
     }
 
     private System.Collections.IEnumerator EndMeetingCoroutine(int ejectedPlayerId)
     {
-        yield return new WaitForSeconds(_resultsDuration);
-
-        // Actual Ejection Logic
-        // Actual Ejection Logic
-         if (ejectedPlayerId >= 0 && PhotonNetwork.LocalPlayer != null && PhotonNetwork.LocalPlayer.ActorNumber == ejectedPlayerId)
-         {
-             var health = PhotonNetwork.LocalPlayer.TagObject as GameObject;
-             if(health) health.GetComponent<PlayerHealth>().RPC_Die(-1); 
-         }
-        
-        _emergencyMeetingWindow.SetActive(false); // Just hide it before scene change
-
-        Debug.Log("VotePlayerManager: Return to GameScene...");
-        
-        // Return to Game Scene
-        if (PhotonNetwork.CurrentRoom == null || !PhotonNetwork.IsConnected)
-        {
-             UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
-        }
-        else
-        {
-            if (PhotonNetwork.IsMasterClient)
-            {
-                PhotonNetwork.LoadLevel("GameScene");
-            }
-            // Clients waiting for Master to load level (Assuming AutoSyncScene implies following)
-        }
+        // ... (Original Code)
     }
+    */
     
+    // Recursive Find Helper
+    private Transform FindDeep(Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == name) return child;
+            var result = FindDeep(child, name);
+            if (result != null) return result;
+        }
+        return null;
+    }
+
     // Helper for debugging logs
     public void Log(string msg) { Debug.Log(msg); }
 }

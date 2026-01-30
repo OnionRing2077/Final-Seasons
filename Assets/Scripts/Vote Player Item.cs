@@ -32,13 +32,51 @@ public class VotePlayerItem : MonoBehaviour
             var t = transform.Find("[PLAYER STATUS]");
             if(t) _playerStatusText = t.GetComponent<TMP_Text>();
         }
+
+        if (_voteButton == null)
+        {
+            _voteButton = GetComponent<Button>(); // If on root
+            if (_voteButton == null) _voteButton = GetComponentInChildren<Button>(); // If child
+        }
+
+        // Auto-find other visual elements
+        if (_characterContainer == null) _characterContainer = transform.Find("CharacterContainer");
+        if (_characterContainer == null) _characterContainer = transform.Find("Mask/CharacterContainer");
+        // Auto-Create if still missing
+        if (_characterContainer == null)
+        {
+             GameObject c = new GameObject("CharacterContainer");
+             c.transform.SetParent(transform, false);
+             _characterContainer = c.transform;
+        }
+
+        if (_votedBadge == null) _votedBadge = transform.Find("VotedBadge")?.gameObject;
+        if (_reporterBadge == null) _reporterBadge = transform.Find("ReporterBadge")?.gameObject;
+        
+        if (_voterContainer == null) _voterContainer = transform.Find("VoterContainer");
+        if (_voterContainer == null) _voterContainer = transform.Find("Voters/VoterContainer");
+        // Auto-Create if still missing
+        if (_voterContainer == null)
+        {
+             GameObject v = new GameObject("VoterContainer");
+             v.transform.SetParent(transform, false);
+             // Try to position it sensibly if possible, or just let LayoutGroup handle it
+             _voterContainer = v.transform;
+        }
     }
 
-    public void Initialize(Photon.Realtime.Player player, bool isDead)
+    private bool _isDead;
+    private int _mockId = -1;
+
+    public void Initialize(Photon.Realtime.Player player, bool isDead, int mockId = -1)
     {
+        if (this == null) return; // Paranoia check
+
         try
         {
-            Debug.Log($"VotePlayerItem: Initialize called. Player={(player==null?"null":player.NickName)}, Dead={isDead}");
+            _isDead = isDead;
+            _mockId = mockId;
+            Debug.Log($"VotePlayerItem: Initialize called. Player={(player==null?"null":player.NickName)}, Dead={isDead}, MockID={mockId}");
             _targetPlayer = player;
             if (player != null)
             {
@@ -69,6 +107,15 @@ public class VotePlayerItem : MonoBehaviour
                 // Clear old children if any
                 foreach(Transform child in _characterContainer) Destroy(child.gameObject);
     
+                if (_characterPrefab == null)
+                {
+                    // Fallback Load
+                    _characterPrefab = Resources.Load<GameObject>("Player");
+                    if (_characterPrefab == null) _characterPrefab = Resources.Load<GameObject>("Player fix");
+                }
+                
+                if (_characterPrefab == null) return; // Skip if no prefab (mock might not have one)
+
                 GameObject charVisual = Instantiate(_characterPrefab, _characterContainer);
                 charVisual.transform.localPosition = Vector3.zero;
                 charVisual.transform.localScale = Vector3.one;
@@ -106,25 +153,45 @@ public class VotePlayerItem : MonoBehaviour
             }
             
             // เมื่อกดปุ่ม ให้เรียกฟังก์ชันที่ Manager
-            _voteButton.onClick.AddListener(() => {
-                if (_targetPlayer != null)
-                    VotePlayerManager.Instance.CastVote(_targetPlayer.ActorNumber);
-                else
-                    VotePlayerManager.Instance.Log("Clicked Mock Player (No ID)");
-            });
+            if (_voteButton != null)
+            {
+                _voteButton.onClick.RemoveAllListeners();
+                _voteButton.onClick.AddListener(() => {
+                    if (_targetPlayer != null)
+                        VotePlayerManager.Instance.CastVote(_targetPlayer.ActorNumber);
+                    else if (_mockId != -1)
+                        VotePlayerManager.Instance.CastVote(_mockId);
+                    else
+                        VotePlayerManager.Instance.Log("Clicked Mock Player (No ID)");
+                });
+            }
+            else
+            {
+                Debug.LogError("VotePlayerItem: Critical Error - No Vote Button found on this prefab!");
+            }
+
             
             if(_votedBadge) _votedBadge.SetActive(false);
             if(_reporterBadge) _reporterBadge.SetActive(false);
             
             // Clear old voters
-            foreach(Transform child in _voterContainer) {
-                Destroy(child.gameObject);
+            // Clear old voters
+            if (_voterContainer != null)
+            {
+                foreach(Transform child in _voterContainer) {
+                    Destroy(child.gameObject);
+                }
             }
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"VotePlayerItem: CRASH during Initialize! Error: {ex.Message}\n{ex.StackTrace}");
         }
+    }
+
+    public bool IsDeadForLogic()
+    {
+        return _isDead;
     }
 
     public void SetInteractable(bool canVote)
@@ -145,6 +212,11 @@ public class VotePlayerItem : MonoBehaviour
 
     public void AddVoter(Color voterColor)
     {
+        if (_voterIconPrefab == null)
+        {
+             _voterIconPrefab = Resources.Load<GameObject>("Head-Photoroom");
+        }
+
         if (_voterIconPrefab && _voterContainer)
         {
             GameObject iconObj = Instantiate(_voterIconPrefab, _voterContainer);

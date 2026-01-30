@@ -7,6 +7,10 @@ public class LocalPlayerBinder : MonoBehaviourPun
     {
         if (!photonView.IsMine) return;
 
+        // ✅ Important: Bind TagObject so we can find this player from PhotonPlayer.TagObject
+        PhotonNetwork.LocalPlayer.TagObject = gameObject;
+
+
         // 🔥 Bind Vision Mask ให้ Local Player
         VisionMaskController mask = FindObjectOfType<VisionMaskController>();
         if (mask != null)

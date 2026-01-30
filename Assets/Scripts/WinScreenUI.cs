@@ -31,16 +31,22 @@ public class WinScreenUI : MonoBehaviour
         switch (result)
         {
             case GameResult.CivilianWin:
-                txt = "CIVILIANS WIN";
+                // User requested: Civilian -> Magician, Sheriff -> Light Magician
+                // Since this is a team win, we use "Magician" (representing the good team).
+                txt = "Magician Win"; 
                 color = Color.green;
                 break;
             case GameResult.ImpostorWin:
-                txt = "IMPOSTORS WIN";
+                txt = "Dark Wizard Win";
                 color = Color.red;
                 break;
             case GameResult.MadmanWin:
-                txt = "MADMAN WINS";
+                txt = "Chaotic Conjurer Win";
                 color = new Color(0.5f, 0, 1f); // Purple
+                break;
+            case GameResult.SheriffWin:
+                txt = "Light Magician Win";
+                color = Color.yellow; // Sheriff usually yellow/gold
                 break;
         }
 

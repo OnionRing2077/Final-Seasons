@@ -13,6 +13,41 @@ public class WinManager : MonoBehaviourPun
 
     void Start()
     {
+        // Check for specific win overrides first (e.g. from EndVoteScene)
+        if (PhotonNetwork.CurrentRoom != null)
+        {
+            if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("Winner", out object winnerObj))
+            {
+                string winner = (string)winnerObj;
+                Debug.Log($"WinManager: Found Winner Property = {winner}");
+
+                if (winner == "Madman")
+                {
+                    EndGame(GameResult.MadmanWin);
+                    return;
+                }
+                else if (winner == "Impostor")
+                {
+                    EndGame(GameResult.ImpostorWin);
+                    return;
+                }
+                else if (winner == "Civilian")
+                {
+                    EndGame(GameResult.CivilianWin);
+                    return;
+                }
+                else if (winner == "Sheriff")
+                {
+                    EndGame(GameResult.SheriffWin);
+                    return;
+                }
+            }
+            else
+            {
+                Debug.Log("WinManager: No 'Winner' property found in Room.");
+            }
+        }
+
         // Check immediately when scene loads (e.g. returning from Meeting)
         if (PhotonNetwork.IsMasterClient)
         {
@@ -27,6 +62,7 @@ public class WinManager : MonoBehaviourPun
     {
         int impostorAlive = 0;
         int goodAlive = 0;
+        int sheriffAlive = 0;
 
         foreach (Player p in PhotonNetwork.PlayerList)
         {
@@ -37,9 +73,14 @@ public class WinManager : MonoBehaviourPun
             PlayerRole role = (PlayerRole)(int)p.CustomProperties["role"];
 
             if (role == PlayerRole.Impostor)
+            {
                 impostorAlive++;
+            }
             else
+            {
                 goodAlive++;
+                if (role == PlayerRole.Sheriff) sheriffAlive++;
+            }
         }
 
         // 🔴 Impostor ชนะ
@@ -49,10 +90,13 @@ public class WinManager : MonoBehaviourPun
             return;
         }
 
-        // 🟢 Civilian ชนะ (ถ้าไม่มี Impostor เหลือแล้ว)
+        // 🟢 Civilian/Sheriff ชนะ (ถ้าไม่มี Impostor เหลือแล้ว)
         if (impostorAlive == 0)
         {
-            EndGame(GameResult.CivilianWin);
+            if (sheriffAlive > 0)
+                EndGame(GameResult.SheriffWin);
+            else
+                EndGame(GameResult.CivilianWin);
             return;
         }
     }

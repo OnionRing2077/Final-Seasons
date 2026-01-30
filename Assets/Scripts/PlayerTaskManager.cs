@@ -14,6 +14,9 @@ public class PlayerTaskManager : MonoBehaviourPun
     PlayerIdentity myId;
     public bool hasDocument;
 
+    // Static Dict to memorize tasks between scenes [PlayerName -> List<Task>]
+    public static Dictionary<string, List<PlayerTask>> SavedTasks = new Dictionary<string, List<PlayerTask>>();
+
     IEnumerator Start()
     {
         myId = GetComponent<PlayerIdentity>();
@@ -21,36 +24,64 @@ public class PlayerTaskManager : MonoBehaviourPun
         // รอ role จาก Photon
         while (!PhotonNetwork.LocalPlayer.CustomProperties.ContainsKey("role"))
             yield return null;
-
+        
+        // Wait a bit to ensure old static data isn't from a previous game session if needed?
+        // Actually, we should clear static tasks when game ends, but for now this is fine for "Continue"
+        
         AssignTasks();
+        RestoreVisuals();
+    }
+
+    void RestoreVisuals()
+    {
+        // Re-check completion status
+        foreach(var t in myTasks) 
+        {
+            if(t.completed) OnTaskUpdate?.Invoke();
+        }
     }
 
     void AssignTasks()
     {
-        Debug.Log("TASK DB COUNT = " + TaskDatabase.allTasks.Count);
-        myTasks.Clear();
-
-        bool isImpostor = myId.Role == PlayerRole.Impostor;
-        List<PlayerTask> pool = new List<PlayerTask>(TaskDatabase.allTasks);
-
-        for (int i = 0; i < tasksPerPlayer && pool.Count > 0; i++)
+        string key = PhotonNetwork.LocalPlayer.NickName; // Or UserID
+        
+        // 1. Try Load
+        if (SavedTasks.ContainsKey(key))
         {
-            int rand = Random.Range(0, pool.Count);
+            myTasks = SavedTasks[key];
+            Debug.Log($"PlayerTaskManager: Restore {myTasks.Count} tasks for {key}");
+        }
+        else
+        {
+            // 2. Create New
+            Debug.Log("TASK DB COUNT = " + TaskDatabase.allTasks.Count);
+            myTasks.Clear();
 
-            myTasks.Add(new PlayerTask
+            bool isImpostor = myId.Role == PlayerRole.Impostor;
+            List<PlayerTask> pool = new List<PlayerTask>(TaskDatabase.allTasks);
+
+            for (int i = 0; i < tasksPerPlayer && pool.Count > 0; i++)
             {
-                taskName = pool[rand].taskName,
-                completed = false,
-                isFake = isImpostor
-            });
+                int rand = Random.Range(0, pool.Count);
 
-            pool.RemoveAt(rand);
+                myTasks.Add(new PlayerTask
+                {
+                    taskName = pool[rand].taskName,
+                    completed = false,
+                    isFake = isImpostor
+                });
+
+                pool.RemoveAt(rand);
+            }
+            
+            // Save
+            SavedTasks[key] = myTasks;
         }
 
         OnTaskUpdate?.Invoke();
 
-        if (!isImpostor && RoomTaskManager.Instance != null)
-            RoomTaskManager.Instance.RegisterTasks(myTasks.Count);
+        if (myId.Role != PlayerRole.Impostor && RoomTaskManager.Instance != null)
+             RoomTaskManager.Instance.RegisterTasks(myTasks.Count); // Note: RoomManager might verify redundancy
     }
 
     // ================= TASK LOGIC =================

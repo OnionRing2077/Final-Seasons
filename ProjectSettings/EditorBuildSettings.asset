@@ -23,4 +23,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MeetingScene.unity
     guid: 3e752b6aba002d542934d38511f1eca9
+  - enabled: 1
+    path: Assets/Scenes/EndVoteScene.unity
+    guid: 21494d86b7ca4904091f5a008eeaaca4
+  - enabled: 1
+    path: Assets/Scenes/WinScene.unity
+    guid: c79cbb01799485843bc11148dfe5e3a5
   m_configObjects: {}

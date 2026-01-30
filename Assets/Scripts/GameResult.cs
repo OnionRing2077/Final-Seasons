@@ -2,5 +2,6 @@ public enum GameResult
 {
     CivilianWin,
     ImpostorWin,
-    MadmanWin
+    MadmanWin,
+    SheriffWin
 }
