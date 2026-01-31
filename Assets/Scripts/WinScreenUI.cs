@@ -25,40 +25,76 @@ public class WinScreenUI : MonoBehaviour
         currentResult = result;
         isGameOver = true;
 
-        string txt = "";
+        string roleTitle = "";
         Color color = Color.white;
 
+        // 1. Determine Winner Role Name & Color
         switch (result)
         {
             case GameResult.CivilianWin:
-                // User requested: Civilian -> Magician, Sheriff -> Light Magician
-                // Since this is a team win, we use "Magician" (representing the good team).
-                txt = "Magician Win"; 
+                roleTitle = GetRoleDisplayName(PlayerRole.Civilian); 
                 color = Color.green;
                 break;
             case GameResult.ImpostorWin:
-                txt = "Dark Wizard Win";
+                roleTitle = GetRoleDisplayName(PlayerRole.Impostor);
                 color = Color.red;
                 break;
             case GameResult.MadmanWin:
-                txt = "Chaotic Conjurer Win";
+                roleTitle = GetRoleDisplayName(PlayerRole.Madman);
                 color = new Color(0.5f, 0, 1f); // Purple
                 break;
             case GameResult.SheriffWin:
-                txt = "Light Magician Win";
-                color = Color.yellow; // Sheriff usually yellow/gold
+                roleTitle = GetRoleDisplayName(PlayerRole.Sheriff);
+                color = Color.yellow; 
                 break;
+        }
+
+        string finalTitle = roleTitle + " Win";
+
+        // ==================================================
+        // LIST PLAYERS & ROLES
+        // ==================================================
+        string listTxt = "\n\n"; 
+
+        if (PhotonNetwork.PlayerList != null)
+        {
+            foreach (var p in PhotonNetwork.PlayerList)
+            {
+                string roleName = "Unknown";
+                if (p.CustomProperties.TryGetValue("role", out object rVal))
+                {
+                    PlayerRole roleEnum = (PlayerRole)(int)rVal;
+                    // Use the SAME helper method so strings match exactly
+                    roleName = GetRoleDisplayName(roleEnum);
+                }
+                
+                listTxt += $"{p.NickName} : {roleName}\n";
+            }
         }
 
         if (winnerText)
         {
-            winnerText.text = txt;
+            winnerText.text = finalTitle + listTxt;
             winnerText.color = color;
         }
 
         if (winPanel) winPanel.SetActive(true);
 
-        Debug.Log("SHOW WIN: " + txt);
+        Debug.Log("SHOW WIN: " + finalTitle);
+    }
+
+    /// <summary>
+    /// Centralized method for Role Names to ensure consistency.
+    /// </summary>
+    string GetRoleDisplayName(PlayerRole role)
+    {
+        switch (role)
+        {
+            case PlayerRole.Impostor: return "DarkWizard";
+            case PlayerRole.Sheriff:  return "LightMagician";
+            case PlayerRole.Madman:   return "ChaoticConjurer";
+            default:                  return "Magician";
+        }
     }
 
     // Fallback GUI if no UI assigned
