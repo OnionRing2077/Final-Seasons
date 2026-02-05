@@ -81,7 +81,12 @@ public class PlayerTaskManager : MonoBehaviourPun
         OnTaskUpdate?.Invoke();
 
         if (myId.Role != PlayerRole.Impostor && RoomTaskManager.Instance != null)
-             RoomTaskManager.Instance.RegisterTasks(myTasks.Count); // Note: RoomManager might verify redundancy
+        {
+             int completedCount = 0;
+             foreach(var t in myTasks) if(t.completed) completedCount++;
+
+             RoomTaskManager.Instance.RegisterTasks(myTasks.Count, completedCount);
+        }
     }
 
     // ================= TASK LOGIC =================

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Photon.Pun;
 
-public class BackToMainMenu : MonoBehaviour
+public class BackToMainMenu : MonoBehaviourPunCallbacks
 {
     public string mainMenuScene = "MainMenu";
 
@@ -19,7 +19,7 @@ public class BackToMainMenu : MonoBehaviour
     }
 
     // Photon callback
-    public void OnLeftRoom()
+    public override void OnLeftRoom()
     {
         SceneManager.LoadScene(mainMenuScene);
     }

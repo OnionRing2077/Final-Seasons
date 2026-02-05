@@ -2,13 +2,29 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
-public class WinManager : MonoBehaviourPun
+public class WinManager : MonoBehaviourPunCallbacks
 {
     public static WinManager Instance;
 
     void Awake()
     {
         Instance = this;
+    }
+
+    public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
+    {
+        if (PhotonNetwork.IsMasterClient && changedProps.ContainsKey("IsDead"))
+        {
+            CheckWinConditions();
+        }
+    }
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            CheckWinConditions();
+        }
     }
 
     void Start()

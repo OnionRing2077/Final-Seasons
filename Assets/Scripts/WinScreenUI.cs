@@ -50,15 +50,37 @@ public class WinScreenUI : MonoBehaviour
                 break;
         }
 
+        // Check Local Player Role & Result
+        string myRoleStr = "Civilian";
+        PlayerRole myRole = PlayerRole.Civilian;
+        
+        if (PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue("role", out object r))
+        {
+             myRole = (PlayerRole)(int)r;
+             myRoleStr = myRole.ToString();
+        }
+
+        bool iWon = false;
+        if (result == GameResult.ImpostorWin && myRole == PlayerRole.Impostor) iWon = true;
+        else if (result == GameResult.MadmanWin && myRole == PlayerRole.Madman) iWon = true;
+        else if ((result == GameResult.CivilianWin || result == GameResult.SheriffWin) && 
+                 (myRole == PlayerRole.Civilian || myRole == PlayerRole.Sheriff)) iWon = true;
+
+        string outcome = iWon ? "YOU WON!" : "YOU LOST";
+        
         if (winnerText)
         {
-            winnerText.text = txt;
-            winnerText.color = color;
+            winnerText.text = $"{txt}\n\nYour Role: {myRoleStr}\n{outcome}";
+            winnerText.color = iWon ? Color.green : Color.red; // Green for win, Red for loss (override global color?)
+            // Or keep global color for the title? Let's generic white or keep global color.
+            // Let's use the team color defined above for consistency, but maybe add outcome text separately?
+            // For now, simpler is better.
+            winnerText.color = color; 
         }
 
         if (winPanel) winPanel.SetActive(true);
 
-        Debug.Log("SHOW WIN: " + txt);
+        Debug.Log($"SHOW WIN: {txt} | MyRole: {myRole} | I Won: {iWon}");
     }
 
     // Fallback GUI if no UI assigned

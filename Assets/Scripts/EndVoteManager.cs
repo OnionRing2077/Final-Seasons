@@ -161,12 +161,9 @@ public class EndVoteManager : MonoBehaviourPunCallbacks
             }
             else
             {
-                // FORCE WIN (User Request): Go to WinScene even if game continues
-                // Decide winner based on who is alive now
-                if (sheriffAlive > 0) SetWinnerAndGo("Sheriff");
-                else SetWinnerAndGo("Civilian");
-                
-                // Original: PhotonNetwork.LoadLevel("GameScene");
+                // Game continues
+                Debug.Log("EndVoteManager: Game Continues... Loading GameScene.");
+                PhotonNetwork.LoadLevel("GameScene");
             }
         }
         catch (System.Exception ex)
